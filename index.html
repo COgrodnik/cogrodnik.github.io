@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cristóbal Ogrodnik — Design Engineer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,300;1,400;1,700;1,800&family=Caveat:wght@700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { overflow-x: hidden; }
+body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
+
+#spacer { height: 400vh; }
+
+/* ═══════════════════════════════════════
+   LAYER 1 — ABOUT  (fondo, z-index 1)
+═══════════════════════════════════════ */
+#about {
+  position: fixed;
+  inset: 0;
+  background: #ffffff;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.cream-top {
+  position: absolute;
+  top: 0; left: 52px;
+  width: 56%; height: 110px;
+  background: #faf5ec;
+  border-radius: 0 0 10px 10px;
+  z-index: 0;
+}
+
+.mini-chevron { position: absolute; top: 20px; right: 52px; z-index: 3; cursor: pointer; }
+.mini-chevron svg { width: 17px; height: 17px; }
+
+/* Layout centrado horizontalmente */
+.about-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;   /* centrado horizontal */
+  padding: 60px 52px 40px;
+  gap: 52px;
+  max-width: 1200px;
+  margin: 0 auto;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+}
+
+/* Columna texto */
+.about-text {
+  flex: 1;
+  min-width: 0;
+  max-width: 500px;
+}
+
+.hola-title {
+  font-family: 'Caveat', cursive;
+  font-size: clamp(44px, 5.5vw, 68px);
+  font-weight: 700; color: #1a1a1a;
+  line-height: 1; margin-bottom: 20px;
+}
+.about-name-h {
+  font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px;
+}
+.about-degree {
+  font-size: 11px; color: #888; line-height: 1.6; margin-bottom: 12px;
+}
+.cream-mid {
+  width: 100%; height: 8px;
+  background: #faf5ec; border-radius: 4px;
+  margin-bottom: 12px;
+}
+.about-p {
+  font-size: 11px; color: #555; line-height: 1.75; margin-bottom: 8px;
+}
+
+.cta-row { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 12px 36px; font-family: 'Montserrat', sans-serif;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.05em;
+  border-radius: 4px; text-decoration: none; border: none; cursor: pointer;
+  transition: transform .15s ease, opacity .15s ease;
+}
+.btn:hover { transform: translateY(-2px); opacity: .88; }
+.btn-dark  { background: #2d2d2d; color: #fff; }
+.btn-cream { background: #ede8dc; color: #4a4a4a; }
+
+/* Columna foto */
+.photo-col {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+.photo-circle {
+  width: 300px; height: 300px;
+  border-radius: 50%; overflow: hidden;
+  border: 6px solid #ffffff;
+  box-shadow: 0 14px 44px rgba(0,0,0,0.15);
+  background: #bbb;
+}
+.photo-circle img { width:100%; height:100%; object-fit:cover; display:block; }
+.photo-placeholder {
+  width:100%; height:100%;
+  display:flex; align-items:center; justify-content:center;
+  flex-direction:column; gap:6px;
+  background: linear-gradient(145deg,#666 0%,#3a3a3a 100%);
+  color:rgba(255,255,255,0.5); font-size:11px; font-weight:600;
+  letter-spacing:0.06em; text-align:center; padding:24px;
+}
+
+/* Flecha inicio (abajo, aparece al final del scroll) */
+#arrow-up {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s ease;
+  background: none; border: none;
+  font-family: 'Montserrat', sans-serif;
+}
+#arrow-up.show { opacity: 1; pointer-events: all; }
+.arrow-up-label {
+  font-size: 11px; font-weight: 300; font-style: italic;
+  color: rgba(0,0,0,0.4); letter-spacing: 0.1em;
+}
+#arrow-up svg { width: 18px; height: 18px; animation: bounceUp 2.2s ease-in-out infinite; }
+
+/* ═══════════════════════════════════════
+   LAYER 2 — HERO  (encima, z-index 10)
+═══════════════════════════════════════ */
+#hero {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background:
+    radial-gradient(ellipse at 18% 82%, #2c2c2c 0%, transparent 52%),
+    radial-gradient(ellipse at 82% 18%, #222 0%, transparent 48%),
+    #111111;
+  will-change: transform;
+}
+
+.hero-logo { position:absolute; top:36px; left:52px; font-size:13px; font-weight:800; letter-spacing:0.1em; color:#fff; }
+
+.hero-center { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; }
+.hero-subtitle { font-size:15px; font-weight:300; font-style:italic; letter-spacing:0.1em; color:rgba(255,255,255,0.52); margin-bottom:2px; }
+.hero-title-text { font-size:clamp(56px,8.5vw,100px); font-weight:800; font-style:italic; letter-spacing:-0.025em; line-height:0.87; color:#fff; text-transform:uppercase; }
+.hero-web { font-size:clamp(24px,3.6vw,44px); font-weight:300; font-style:italic; color:rgba(255,255,255,0.72); text-align:right; margin-top:6px; }
+
+.hero-bottom { position:absolute; bottom:36px; left:52px; right:52px; display:flex; align-items:flex-end; justify-content:space-between; }
+
+/* NOMBRE — en móvil se parte en 2 líneas para no chocar con desliza */
+.hero-name {
+  font-size: 11px; font-weight: 800; letter-spacing: 0.22em;
+  text-transform: uppercase; color: #fff; line-height: 1.4;
+}
+.hero-name span { font-weight:400; color:rgba(255,255,255,0.38); margin-left:4px; }
+
+.desliza-group {
+  position: absolute; left: 50%; bottom: 0;
+  transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.desliza-label { font-size:11px; font-weight:300; font-style:italic; color:rgba(255,255,255,0.42); letter-spacing:0.1em; }
+.desliza-group svg { width:18px; height:18px; animation:bounceDown 2.2s ease-in-out infinite; }
+.hero-year { font-size:11px; font-weight:300; letter-spacing:0.2em; color:rgba(255,255,255,0.38); }
+
+/* Barra nombre sticky */
+#name-bar {
+  position:fixed; top:0; left:0; right:0; z-index:20;
+  padding:18px 52px; display:flex; justify-content:space-between; align-items:center;
+  background:
+    radial-gradient(ellipse at 18% 82%,#2c2c2c 0%,transparent 52%),
+    radial-gradient(ellipse at 82% 18%,#222 0%,transparent 48%),
+    #111111;
+  color:#fff; opacity:0; pointer-events:none; transition:opacity .3s ease;
+}
+#name-bar.show { opacity:1; pointer-events:all; }
+.bar-name { font-size:11px; font-weight:800; letter-spacing:0.22em; text-transform:uppercase; }
+.bar-name span { font-weight:400; color:rgba(255,255,255,0.38); margin-left:10px; }
+.bar-year { font-size:11px; font-weight:300; letter-spacing:0.2em; color:rgba(255,255,255,0.38); }
+
+/* Animaciones */
+@keyframes bounceDown { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
+@keyframes bounceUp   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+
+/* ═══════════════════════════════════════
+   RESPONSIVE — MÓVIL
+═══════════════════════════════════════ */
+@media (max-width: 700px) {
+  /* About: foto arriba, texto abajo, todo centrado */
+  .about-inner {
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 80px 24px 40px;
+    gap: 20px;
+    overflow-y: auto;
+    transform: none;
+    left: 0;
+  }
+
+  .photo-col { order: -1; } /* foto primero */
+  .photo-circle { width: 160px; height: 160px; }
+
+  .about-text {
+    max-width: 100%;
+    text-align: left;
+  }
+
+  .hola-title { font-size: 38px; margin-bottom: 14px; }
+  .about-name-h { font-size: 13px; }
+  .about-degree { font-size: 10px; }
+  .about-p { font-size: 10px; margin-bottom: 6px; }
+  .btn { padding: 10px 24px; font-size: 11px; }
+
+  .cream-top { left: 24px; width: 70%; }
+  .mini-chevron { right: 24px; }
+
+  /* Hero móvil: nombre en 2 líneas para no chocar con desliza */
+  .hero-name {
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    line-height: 1.5;
+    max-width: 30vw; /* fuerza salto de línea */
+    word-break: break-word;
+  }
+  .hero-logo { left: 20px; top: 24px; font-size: 11px; }
+  .hero-bottom { left: 20px; right: 20px; bottom: 28px; }
+  .hero-year { font-size: 9px; }
+  #name-bar { padding: 14px 20px; }
+}
+</style>
+</head>
+<body>
+
+<div id="spacer"></div>
+
+<!-- LAYER 1: About -->
+<section id="about">
+  <div class="cream-top"></div>
+  <div class="mini-chevron" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    <svg viewBox="0 0 18 18" fill="none">
+      <path d="M3 6L9 12L15 6" stroke="#c8c8c8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <div class="about-inner">
+    <!-- Texto -->
+    <div class="about-text">
+      <h2 class="hola-title">¡HOLA!</h2>
+      <h3 class="about-name-h">Mi nombre es Cristóbal Ogrodnik Bert</h3>
+      <p class="about-degree">Ingeniero en diseño con Master en Innovación y Diseño de la Universidad Adolfo Ibañez, Santiago, Chile.</p>
+      <div class="cream-mid"></div>
+      <p class="about-p">Soy amante de la creación de productos únicos, con impacto e identidad. Me apasiona ver cómo las cosas pasan del mundo de las ideas al físico, con todos los desafíos, aprendizajes y procesos conlleva lograrlo.</p>
+      <p class="about-p">Por otro lado, tengo alma emprendedora, siendo parte de distintos proyectos. Uno de los más destacados es Neast Components, empresa de componentes de seguridad para ciclistas de montaña, diseñamos productos únicos pensados en los ciclistas chilenos. Recientemente, comencé a desarrollar una marca de juguetes especializados para perros, llamada Yuki Pet.</p>
+      <p class="about-p">Me interesan mucho las herramientas de fabricación digital: Fabricación aditiva en todos sus formatos (SLA, SLS, FDM, etc), robótica y fabricación sustractiva (láser, CNC, etc). Tengo experiencia trabajando en el FabLab de la Diseño de la Universidad Adolfo Ibañez.</p>
+      <p class="about-p">Además, paralelamente también llevo un par de años desarrollándome en la fotografía y filmmaking.</p>
+      <div class="cta-row">
+        <a href="proyectos.html" class="btn btn-dark">Proyectos</a>
+        <a href="resumen.html"   class="btn btn-cream">Más</a>
+      </div>
+    </div>
+
+    <!-- Foto -->
+    <div class="photo-col">
+      <div class="photo-circle">
+        <!-- <img src="foto.jpg" alt="Cristóbal Ogrodnik"> -->
+        <div class="photo-placeholder">Tu foto<br>aquí</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Flecha inicio (aparece al llegar al final del scroll) -->
+<button id="arrow-up" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <span class="arrow-up-label">inicio</span>
+  <svg viewBox="0 0 18 18" fill="none">
+    <path d="M15 12L9 6L3 12" stroke="rgba(0,0,0,0.4)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</button>
+
+<!-- LAYER 2: Hero -->
+<section id="hero">
+  <div class="hero-logo">"LOGO "</div>
+  <div class="hero-center">
+    <p class="hero-subtitle">Design engineer</p>
+    <h1 class="hero-title-text">PORTFOLIO</h1>
+    <p class="hero-web">web</p>
+  </div>
+  <div class="hero-bottom">
+    <div class="hero-name">CRISTÓBAL<br>OGRODNIK <span>CL</span></div>
+    <div class="desliza-group">
+      <span class="desliza-label">desliza</span>
+      <svg viewBox="0 0 18 18" fill="none">
+        <path d="M3 6L9 12L15 6" stroke="rgba(255,255,255,0.52)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="hero-year">2026</div>
+  </div>
+</section>
+
+<!-- Barra nombre -->
+<div id="name-bar">
+  <div class="bar-name">CRISTÓBAL OGRODNIK <span>CL</span></div>
+  <div class="bar-year">2026</div>
+</div>
+
+<script>
+  const hero    = document.getElementById('hero');
+  const nameBar = document.getElementById('name-bar');
+  const arrowUp = document.getElementById('arrow-up');
+
+  let currentY = 0;
+  let targetY  = 0;
+  const EASE   = 0.10;
+
+  // El scroll termina cuando el hero sale completamente (1 × vh)
+  // La flecha "inicio" aparece cuando el usuario llegó al fondo del spacer
+  const SPACER_H = 400; // vh units del spacer (400vh)
+
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  function tick() {
+    const vh      = window.innerHeight;
+    const scrollY = window.scrollY;
+    const maxScroll = document.body.scrollHeight - vh;
+
+    targetY  = Math.min(scrollY, vh);
+    currentY = lerp(currentY, targetY, EASE);
+
+    hero.style.transform = 'translateY(-' + currentY.toFixed(2) + 'px)';
+
+    // Barra nombre: cuando hero casi salió
+    nameBar.classList.toggle('show', currentY >= vh - 2);
+
+    // Flecha inicio: cuando el usuario llegó cerca del fondo del spacer
+    const nearBottom = scrollY >= maxScroll - vh * 0.3;
+    arrowUp.classList.toggle('show', nearBottom && currentY >= vh - 2);
+
+    requestAnimationFrame(tick);
+  }
+
+  requestAnimationFrame(tick);
+</script>
+
+</body>
+</html>

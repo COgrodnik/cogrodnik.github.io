@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proyectos — Cristóbal Ogrodnik</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,600;0,700;0,800&family=Caveat:wght@700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --dark: #1a1a1a;
+  --white: #ffffff;
+  --cream: #f5f0e8;
+  --gray: #888888;
+  --btn-dark: #2d2d2d;
+  --btn-cream: #f0ebe0;
+}
+
+body {
+  font-family: 'Montserrat', sans-serif;
+  background: var(--white);
+  color: var(--dark);
+  min-height: 100vh;
+}
+
+.top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 36px 8%;
+}
+
+.page-title {
+  font-family: 'Caveat', cursive;
+  font-size: clamp(44px, 6vw, 72px);
+  font-weight: 700;
+  color: var(--dark);
+  line-height: 1;
+}
+
+.nav-buttons { display: flex; gap: 12px; align-items: center; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 32px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border-radius: 4px;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.btn:hover { transform: translateY(-1px); opacity: 0.85; }
+.btn-dark { background: var(--btn-dark); color: var(--white); }
+.btn-light { background: var(--btn-cream); color: #555; }
+
+.projects-wrapper { padding: 20px 6% 80px; }
+
+.group-labels {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-bottom: 16px;
+}
+
+.group-label { padding: 0 8px; }
+.group-name { font-size: 13px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+.group-desc { font-size: 11px; font-weight: 400; color: var(--gray); line-height: 1.5; }
+
+.pills-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 14px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+.pill-card {
+  position: relative;
+  border-radius: 200px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: #e0e0e0;
+  aspect-ratio: 0.45;
+  text-decoration: none;
+  display: block;
+}
+
+.pill-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 24px 48px rgba(0,0,0,0.18);
+}
+
+.pill-card.short { margin-top: 60px; }
+
+.pill-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Hover overlay */
+.pill-card::after {
+  content: attr(data-name);
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  padding: 16px;
+  text-align: center;
+  border-radius: 200px;
+  text-transform: uppercase;
+}
+.pill-card:hover::after { opacity: 1; }
+
+/* Bottom labels */
+.bottom-labels {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-top: 20px;
+}
+.bottom-label { padding: 0 8px; }
+.bottom-name { font-size: 13px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+.bottom-desc { font-size: 11px; font-weight: 400; color: var(--gray); line-height: 1.5; }
+
+/* Reveal animations */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+.pill-card {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.6s ease, transform 0.6s ease, box-shadow 0.3s ease;
+}
+.pill-card.visible { opacity: 1; transform: translateY(0); }
+.pill-card.visible:hover { transform: translateY(-8px) scale(1.02); }
+
+.pill-card:nth-child(1) { transition-delay: 0s; }
+.pill-card:nth-child(2) { transition-delay: 0.07s; }
+.pill-card:nth-child(3) { transition-delay: 0.14s; }
+.pill-card:nth-child(4) { transition-delay: 0.21s; }
+.pill-card:nth-child(5) { transition-delay: 0.28s; }
+.pill-card:nth-child(6) { transition-delay: 0.35s; }
+.pill-card:nth-child(7) { transition-delay: 0.42s; }
+
+@media (max-width: 1024px) {
+  .pills-row { grid-template-columns: repeat(4, 1fr); }
+  .pill-card.short { margin-top: 0; }
+  .group-labels, .bottom-labels { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .pills-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .group-labels, .bottom-labels { grid-template-columns: 1fr; }
+  .top-nav { flex-direction: column; gap: 24px; align-items: flex-start; padding: 24px 6%; }
+}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <h1 class="page-title reveal">¡PROYECTOS!</h1>
+  <div class="nav-buttons reveal">
+    <a href="resumen.html" class="btn btn-dark">Resumen</a>
+    <a href="index.html" class="btn btn-light">Presentación</a>
+  </div>
+</nav>
+
+<div class="projects-wrapper">
+
+  <!-- Top labels -->
+  <div class="group-labels reveal">
+    <div class="group-label">
+      <p class="group-name">MUDS</p>
+      <p class="group-desc">Calzado modular y ecológico.<br>Proyecto de título universitario.</p>
+    </div>
+    <div class="group-label"></div>
+    <div class="group-label">
+      <p class="group-name">Lontra Platform</p>
+      <p class="group-desc">Concurso diseño para especies.</p>
+    </div>
+    <div class="group-label">
+      <p class="group-name">Espacio Copihue</p>
+      <p class="group-desc">Modelado y programación paramétrica.</p>
+    </div>
+  </div>
+
+  <!-- 7 pills (one per project) -->
+  <div class="pills-row">
+    <a href="proyecto.html?p=muds" class="pill-card" data-name="MUDS">
+      <img src="proyectos-img/MUDS_1.jpg" alt="MUDS">
+    </a>
+
+    <a href="proyecto.html?p=neast" class="pill-card short" data-name="by Neast">
+      <img src="proyectos-img/Neast_1.jpg" alt="Neast">
+    </a>
+
+    <a href="proyecto.html?p=lontra" class="pill-card" data-name="Lontra Platform">
+      <img src="proyectos-img/Lontra_Platform_01.jpg" alt="Lontra Platform">
+    </a>
+
+    <a href="proyecto.html?p=konatec" class="pill-card short" data-name="Konatec">
+      <img src="proyectos-img/Konatec_01.jpg" alt="Konatec">
+    </a>
+
+    <a href="proyecto.html?p=copihue" class="pill-card" data-name="Espacio Copihue">
+      <img src="proyectos-img/Espacio_Copihue_01.jpg" alt="Espacio Copihue">
+    </a>
+
+    <a href="proyecto.html?p=cambridge" class="pill-card short" data-name="Cambridge & José Cruz">
+      <img src="proyectos-img/Cambridge_01.jpg" alt="Cambridge">
+    </a>
+
+    <a href="proyecto.html?p=refugio" class="pill-card" data-name="Refugio Prisma">
+      <img src="proyectos-img/Refugio_Prisma_01.jpg" alt="Refugio Prisma">
+    </a>
+  </div>
+
+  <!-- Bottom labels -->
+  <div class="bottom-labels reveal">
+    <div class="bottom-label"></div>
+    <div class="bottom-label">
+      <p class="bottom-name">by Neast</p>
+      <p class="bottom-desc">Empresa dedicada al diseño y desarrollo de componentes MTB.</p>
+    </div>
+    <div class="bottom-label"></div>
+    <div class="bottom-label">
+      <p class="bottom-name">Konatec</p>
+      <p class="bottom-desc">Rediseño de máquinas de ingeniería.</p>
+    </div>
+  </div>
+
+  <div class="bottom-labels reveal" style="margin-top: 8px;">
+    <div class="bottom-label"></div>
+    <div class="bottom-label">
+      <p class="bottom-name">Cambridge & José Cruz</p>
+      <p class="bottom-desc">Diseño y fabricación de espacio para exhibición internacional.</p>
+    </div>
+    <div class="bottom-label">
+      <p class="bottom-name">Refugio Prisma</p>
+      <p class="bottom-desc">Diseño de espacios arquitectónicos.</p>
+    </div>
+    <div class="bottom-label"></div>
+  </div>
+
+</div>
+
+<script>
+  const reveals = document.querySelectorAll('.reveal');
+  const pills = document.querySelectorAll('.pill-card');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add('visible');
+    });
+  }, { threshold: 0.05 });
+
+  reveals.forEach(el => observer.observe(el));
+  pills.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
