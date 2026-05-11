@@ -9,277 +9,355 @@
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,600;0,700;0,800&family=Caveat:wght@700&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --dark:#1a1a1a; --white:#fff; --gray:#888; --btn-dark:#2d2d2d; --btn-cream:#f0ebe0; }
+body { font-family:'Montserrat',sans-serif; background:#fff; color:var(--dark); min-height:100vh; }
 
-:root {
-  --dark: #1a1a1a;
-  --white: #ffffff;
-  --cream: #f5f0e8;
-  --gray: #888888;
-  --btn-dark: #2d2d2d;
-  --btn-cream: #f0ebe0;
-}
+/* NAV */
+.top-nav { display:flex; align-items:center; justify-content:space-between; padding:36px 8%; flex-wrap:wrap; gap:16px; }
+.page-title { font-family:'Caveat',cursive; font-size:clamp(44px,6vw,72px); font-weight:700; color:var(--dark); line-height:1; }
+.nav-buttons { display:flex; gap:12px; }
+.btn { display:inline-flex; align-items:center; justify-content:center; padding:12px 32px; font-family:'Montserrat',sans-serif; font-size:13px; font-weight:600; letter-spacing:0.04em; border-radius:4px; text-decoration:none; border:none; cursor:pointer; transition:transform .15s,opacity .15s; }
+.btn:hover { transform:translateY(-1px); opacity:.85; }
+.btn-dark { background:var(--btn-dark); color:#fff; }
+.btn-light { background:var(--btn-cream); color:#555; }
 
-body {
-  font-family: 'Montserrat', sans-serif;
-  background: var(--white);
-  color: var(--dark);
-  min-height: 100vh;
-}
-
-.top-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 36px 8%;
-}
-
-.page-title {
-  font-family: 'Caveat', cursive;
-  font-size: clamp(44px, 6vw, 72px);
-  font-weight: 700;
-  color: var(--dark);
-  line-height: 1;
-}
-
-.nav-buttons { display: flex; gap: 12px; align-items: center; }
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 32px;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  border-radius: 4px;
-  text-decoration: none;
-  cursor: pointer;
-  border: none;
-  transition: transform 0.15s ease, opacity 0.15s ease;
-}
-.btn:hover { transform: translateY(-1px); opacity: 0.85; }
-.btn-dark { background: var(--btn-dark); color: var(--white); }
-.btn-light { background: var(--btn-cream); color: #555; }
-
-.projects-wrapper { padding: 20px 6% 80px; }
-
-.group-labels {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-  margin-bottom: 16px;
-}
-
-.group-label { padding: 0 8px; }
-.group-name { font-size: 13px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
-.group-desc { font-size: 11px; font-weight: 400; color: var(--gray); line-height: 1.5; }
+/* ═══ DESKTOP LAYOUT ═══ */
+.desktop-projects { padding:0 6% 80px; }
 
 .pills-row {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 14px;
-  align-items: end;
-  margin-bottom: 16px;
+  align-items: center; /* all same baseline */
 }
 
+/* Each item = label + pill stacked */
+.pill-item { display:flex; flex-direction:column; }
+
+/* Label above */
+.pill-label-top {
+  padding: 0 8px 12px;
+  min-height: 56px;
+}
+/* Label below */
+.pill-label-bottom {
+  padding: 12px 8px 0;
+  min-height: 56px;
+}
+.pill-label-spacer { min-height: 56px; } /* empty space for alignment */
+
+.pill-name { font-size:12px; font-weight:700; color:var(--dark); margin-bottom:3px; }
+.pill-desc { font-size:10px; color:var(--gray); line-height:1.5; }
+
+/* The pill image link */
 .pill-card {
-  position: relative;
-  border-radius: 200px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  background: #e0e0e0;
-  aspect-ratio: 0.45;
-  text-decoration: none;
-  display: block;
+  display:block;
+  border-radius:200px;
+  overflow:hidden;
+  cursor:pointer;
+  text-decoration:none;
+  background:#e0e0e0;
+  aspect-ratio:0.44;
+  position:relative;
+  transition:transform .3s ease, box-shadow .3s ease;
+  opacity:0;
+  transform:translateY(28px);
+  transition:opacity .6s ease, transform .6s ease, box-shadow .3s ease;
 }
+.pill-card.visible { opacity:1; transform:translateY(0); }
+.pill-card.visible:hover { transform:translateY(-8px) scale(1.02); box-shadow:0 24px 48px rgba(0,0,0,0.18); }
 
-.pill-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 24px 48px rgba(0,0,0,0.18);
-}
+/* Stagger */
+.pill-item:nth-child(1) .pill-card { transition-delay:0s; }
+.pill-item:nth-child(2) .pill-card { transition-delay:.07s; }
+.pill-item:nth-child(3) .pill-card { transition-delay:.14s; }
+.pill-item:nth-child(4) .pill-card { transition-delay:.21s; }
+.pill-item:nth-child(5) .pill-card { transition-delay:.28s; }
+.pill-item:nth-child(6) .pill-card { transition-delay:.35s; }
+.pill-item:nth-child(7) .pill-card { transition-delay:.42s; }
 
-.pill-card.short { margin-top: 60px; }
-
-.pill-card img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+.pill-card img { width:100%; height:100%; object-fit:cover; display:block; }
+.pill-placeholder {
+  width:100%; height:100%;
+  display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(160deg,#888 0%,#444 100%);
+  color:rgba(255,255,255,0.5); font-size:10px; font-weight:600;
+  text-align:center; padding:12px;
 }
 
 /* Hover overlay */
 .pill-card::after {
-  content: attr(data-name);
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: white;
-  opacity: 0;
-  transition: opacity 0.25s ease;
-  padding: 16px;
-  text-align: center;
-  border-radius: 200px;
-  text-transform: uppercase;
+  content:attr(data-name);
+  position:absolute; inset:0;
+  background:rgba(0,0,0,0.52);
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:700; letter-spacing:0.1em;
+  color:#fff; opacity:0; transition:opacity .25s;
+  padding:12px; text-align:center; border-radius:200px;
+  text-transform:uppercase;
 }
-.pill-card:hover::after { opacity: 1; }
+.pill-card.visible:hover::after { opacity:1; }
 
-/* Bottom labels */
-.bottom-labels {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-  margin-top: 20px;
-}
-.bottom-label { padding: 0 8px; }
-.bottom-name { font-size: 13px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
-.bottom-desc { font-size: 11px; font-weight: 400; color: var(--gray); line-height: 1.5; }
+/* Alternating heights (odd=tall, even=short) — creates visual rhythm */
+.pill-item:nth-child(odd)  .pill-card { /* normal height via aspect-ratio */ }
+.pill-item:nth-child(even) .pill-card { margin-top:50px; }
 
-/* Reveal animations */
-.reveal {
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.7s ease, transform 0.7s ease;
-}
-.reveal.visible { opacity: 1; transform: translateY(0); }
+/* ═══ MOBILE SLIDER ═══ */
+.mobile-projects { display:none; padding:0 0 60px; }
 
-.pill-card {
-  opacity: 0;
-  transform: translateY(32px);
-  transition: opacity 0.6s ease, transform 0.6s ease, box-shadow 0.3s ease;
-}
-.pill-card.visible { opacity: 1; transform: translateY(0); }
-.pill-card.visible:hover { transform: translateY(-8px) scale(1.02); }
-
-.pill-card:nth-child(1) { transition-delay: 0s; }
-.pill-card:nth-child(2) { transition-delay: 0.07s; }
-.pill-card:nth-child(3) { transition-delay: 0.14s; }
-.pill-card:nth-child(4) { transition-delay: 0.21s; }
-.pill-card:nth-child(5) { transition-delay: 0.28s; }
-.pill-card:nth-child(6) { transition-delay: 0.35s; }
-.pill-card:nth-child(7) { transition-delay: 0.42s; }
-
-@media (max-width: 1024px) {
-  .pills-row { grid-template-columns: repeat(4, 1fr); }
-  .pill-card.short { margin-top: 0; }
-  .group-labels, .bottom-labels { grid-template-columns: repeat(2, 1fr); }
+.mobile-slider-wrap {
+  position:relative;
+  overflow:hidden;
 }
 
-@media (max-width: 640px) {
-  .pills-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .group-labels, .bottom-labels { grid-template-columns: 1fr; }
-  .top-nav { flex-direction: column; gap: 24px; align-items: flex-start; padding: 24px 6%; }
+.mobile-slides {
+  display:flex;
+  transition:transform .4s cubic-bezier(.4,0,.2,1);
+}
+
+.mobile-slide {
+  min-width:100%;
+  padding:0 24px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.mobile-label {
+  text-align:center;
+  margin-bottom:16px;
+  padding:0 16px;
+}
+.mobile-label .pill-name { font-size:14px; }
+.mobile-label .pill-desc { font-size:11px; }
+
+.mobile-pill {
+  width:180px;
+  aspect-ratio:0.44;
+  border-radius:200px;
+  overflow:hidden;
+  display:block;
+  text-decoration:none;
+  background:#e0e0e0;
+}
+.mobile-pill img { width:100%; height:100%; object-fit:cover; display:block; }
+
+.mobile-counter {
+  text-align:center;
+  margin-top:20px;
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:0.15em;
+  color:rgba(0,0,0,0.4);
+}
+.mobile-counter span { color:var(--dark); font-weight:700; }
+
+/* ═══ RESPONSIVE ═══ */
+@media (max-width:700px) {
+  .desktop-projects { display:none; }
+  .mobile-projects  { display:block; }
+  .top-nav { padding:24px 6%; }
 }
 </style>
 </head>
 <body>
 
 <nav class="top-nav">
-  <h1 class="page-title reveal">¡PROYECTOS!</h1>
-  <div class="nav-buttons reveal">
+  <h1 class="page-title">¡PROYECTOS!</h1>
+  <div class="nav-buttons">
     <a href="resumen.html" class="btn btn-dark">Resumen</a>
-    <a href="index.html" class="btn btn-light">Presentación</a>
+    <a href="index.html"   class="btn btn-light">Inicio</a>
   </div>
 </nav>
 
-<div class="projects-wrapper">
+<!-- ═══ DESKTOP ═══ -->
+<div class="desktop-projects">
+  <div class="pills-row" id="pillsRow">
 
-  <!-- Top labels -->
-  <div class="group-labels reveal">
-    <div class="group-label">
-      <p class="group-name">MUDS</p>
-      <p class="group-desc">Calzado modular y ecológico.<br>Proyecto de título universitario.</p>
+    <!-- 1. MUDS — label ABOVE -->
+    <div class="pill-item">
+      <div class="pill-label-top">
+        <p class="pill-name">MUDS</p>
+        <p class="pill-desc">Calzado modular y ecológico. Proyecto de título universitario.</p>
+      </div>
+      <a href="proyecto.html?p=muds" class="pill-card" data-name="MUDS">
+        <img src="portadas-img/MUDS_cover.jpg" alt="MUDS" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="pill-placeholder" style="display:none">MUDS</div>
+      </a>
+      <div class="pill-label-spacer"></div>
     </div>
-    <div class="group-label"></div>
-    <div class="group-label">
-      <p class="group-name">Lontra Platform</p>
-      <p class="group-desc">Concurso diseño para especies.</p>
+
+    <!-- 2. Neast — label BELOW -->
+    <div class="pill-item">
+      <div class="pill-label-spacer"></div>
+      <a href="proyecto.html?p=neast" class="pill-card" data-name="by Neast">
+        <img src="portadas-img/Neast_cover.jpg" alt="Neast" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="pill-placeholder" style="display:none">Neast</div>
+      </a>
+      <div class="pill-label-bottom">
+        <p class="pill-name">by Neast</p>
+        <p class="pill-desc">Empresa dedicada al diseño y desarrollo de componentes MTB.</p>
+      </div>
     </div>
-    <div class="group-label">
-      <p class="group-name">Espacio Copihue</p>
-      <p class="group-desc">Modelado y programación paramétrica.</p>
+
+    <!-- 3. Lontra — label ABOVE -->
+    <div class="pill-item">
+      <div class="pill-label-top">
+        <p class="pill-name">Lontra Platform</p>
+        <p class="pill-desc">Concurso diseño para especies.</p>
+      </div>
+      <a href="proyecto.html?p=lontra" class="pill-card" data-name="Lontra Platform">
+        <img src="portadas-img/Lontra_cover.jpg" alt="Lontra" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="pill-placeholder" style="display:none">Lontra</div>
+      </a>
+      <div class="pill-label-spacer"></div>
+    </div>
+
+    <!-- 4. Konatec — label BELOW -->
+    <div class="pill-item">
+      <div class="pill-label-spacer"></div>
+      <a href="proyecto.html?p=konatec" class="pill-card" data-name="Konatec">
+        <img src="portadas-img/Konatec_cover.jpg" alt="Konatec" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="pill-placeholder" style="display:none">Konatec</div>
+      </a>
+      <div class="pill-label-bottom">
+        <p class="pill-name">Konatec</p>
+        <p class="pill-desc">Rediseño de máquinas de ingeniería.</p>
+      </div>
+    </div>
+
+    <!-- 5. Espacio Copihue — label ABOVE -->
+    <div class="pill-item">
+      <div class="pill-label-top">
+        <p class="pill-name">Espacio Copihue</p>
+        <p class="pill-desc">Modelado y programación paramétrica.</p>
+      </div>
+      <a href="proyecto.html?p=copihue" class="pill-card" data-name="Espacio Copihue">
+        <img src="portadas-img/Copihue_cover.jpg" alt="Copihue" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="pill-placeholder" style="display:none">Copihue</div>
+      </a>
+      <div class="pill-label-spacer"></div>
+    </div>
+
+    <!-- 6. Cambridge — label BELOW -->
+    <div class="pill-item">
+      <div class="pill-label-spacer"></div>
+      <a href="proyecto.html?p=cambridge" class="pill-card" data-name="Cambridge & José Cruz">
+        <img src="portadas-img/Cambridge_cover.jpg" alt="Cambridge" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="pill-placeholder" style="display:none">Cambridge</div>
+      </a>
+      <div class="pill-label-bottom">
+        <p class="pill-name">Cambridge & José Cruz</p>
+        <p class="pill-desc">Diseño y fabricación de espacio para exhibición internacional.</p>
+      </div>
+    </div>
+
+    <!-- 7. Refugio Prisma — label ABOVE -->
+    <div class="pill-item">
+      <div class="pill-label-top">
+        <p class="pill-name">Refugio Prisma</p>
+        <p class="pill-desc">Diseño de espacios arquitectónicos.</p>
+      </div>
+      <a href="proyecto.html?p=refugio" class="pill-card" data-name="Refugio Prisma">
+        <img src="portadas-img/Refugio_cover.jpg" alt="Refugio" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="pill-placeholder" style="display:none">Refugio Prisma</div>
+      </a>
+      <div class="pill-label-spacer"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ MOBILE SLIDER ═══ -->
+<div class="mobile-projects">
+  <div class="mobile-slider-wrap">
+    <div class="mobile-slides" id="mobileSlides">
+
+      <div class="mobile-slide">
+        <div class="mobile-label"><p class="pill-name">MUDS</p><p class="pill-desc">Calzado modular y ecológico. Proyecto de título universitario.</p></div>
+        <a href="proyecto.html?p=muds" class="mobile-pill">
+          <img src="portadas-img/MUDS_cover.jpg" alt="MUDS" onerror="this.src='proyectos-img/MUDS_1.jpg'">
+        </a>
+      </div>
+
+      <div class="mobile-slide">
+        <div class="mobile-label"><p class="pill-name">by Neast</p><p class="pill-desc">Empresa dedicada al diseño y desarrollo de componentes MTB.</p></div>
+        <a href="proyecto.html?p=neast" class="mobile-pill">
+          <img src="portadas-img/Neast_cover.jpg" alt="Neast" onerror="this.src='proyectos-img/Neast_1.jpg'">
+        </a>
+      </div>
+
+      <div class="mobile-slide">
+        <div class="mobile-label"><p class="pill-name">Lontra Platform</p><p class="pill-desc">Concurso diseño para especies.</p></div>
+        <a href="proyecto.html?p=lontra" class="mobile-pill">
+          <img src="portadas-img/Lontra_cover.jpg" alt="Lontra" onerror="this.src='proyectos-img/Lontra_Platform_01.jpg'">
+        </a>
+      </div>
+
+      <div class="mobile-slide">
+        <div class="mobile-label"><p class="pill-name">Konatec</p><p class="pill-desc">Rediseño de máquinas de ingeniería.</p></div>
+        <a href="proyecto.html?p=konatec" class="mobile-pill">
+          <img src="portadas-img/Konatec_cover.jpg" alt="Konatec" onerror="this.src='proyectos-img/Konatec_01.jpg'">
+        </a>
+      </div>
+
+      <div class="mobile-slide">
+        <div class="mobile-label"><p class="pill-name">Espacio Copihue</p><p class="pill-desc">Modelado y programación paramétrica.</p></div>
+        <a href="proyecto.html?p=copihue" class="mobile-pill">
+          <img src="portadas-img/Copihue_cover.jpg" alt="Copihue" onerror="this.src='proyectos-img/Espacio_Copihue_01.jpg'">
+        </a>
+      </div>
+
+      <div class="mobile-slide">
+        <div class="mobile-label"><p class="pill-name">Cambridge & José Cruz</p><p class="pill-desc">Diseño y fabricación para exhibición internacional.</p></div>
+        <a href="proyecto.html?p=cambridge" class="mobile-pill">
+          <img src="portadas-img/Cambridge_cover.jpg" alt="Cambridge" onerror="this.src='proyectos-img/Cambridge_01.jpg'">
+        </a>
+      </div>
+
+      <div class="mobile-slide">
+        <div class="mobile-label"><p class="pill-name">Refugio Prisma</p><p class="pill-desc">Diseño de espacios arquitectónicos.</p></div>
+        <a href="proyecto.html?p=refugio" class="mobile-pill">
+          <img src="portadas-img/Refugio_cover.jpg" alt="Refugio" onerror="this.src='proyectos-img/Refugio_Prisma_01.jpg'">
+        </a>
+      </div>
+
     </div>
   </div>
-
-  <!-- 7 pills (one per project) -->
-  <div class="pills-row">
-    <a href="proyecto.html?p=muds" class="pill-card" data-name="MUDS">
-      <img src="proyectos-img/MUDS_1.jpg" alt="MUDS">
-    </a>
-
-    <a href="proyecto.html?p=neast" class="pill-card short" data-name="by Neast">
-      <img src="proyectos-img/Neast_1.jpg" alt="Neast">
-    </a>
-
-    <a href="proyecto.html?p=lontra" class="pill-card" data-name="Lontra Platform">
-      <img src="proyectos-img/Lontra_Platform_01.jpg" alt="Lontra Platform">
-    </a>
-
-    <a href="proyecto.html?p=konatec" class="pill-card short" data-name="Konatec">
-      <img src="proyectos-img/Konatec_01.jpg" alt="Konatec">
-    </a>
-
-    <a href="proyecto.html?p=copihue" class="pill-card" data-name="Espacio Copihue">
-      <img src="proyectos-img/Espacio_Copihue_01.jpg" alt="Espacio Copihue">
-    </a>
-
-    <a href="proyecto.html?p=cambridge" class="pill-card short" data-name="Cambridge & José Cruz">
-      <img src="proyectos-img/Cambridge_01.jpg" alt="Cambridge">
-    </a>
-
-    <a href="proyecto.html?p=refugio" class="pill-card" data-name="Refugio Prisma">
-      <img src="proyectos-img/Refugio_Prisma_01.jpg" alt="Refugio Prisma">
-    </a>
-  </div>
-
-  <!-- Bottom labels -->
-  <div class="bottom-labels reveal">
-    <div class="bottom-label"></div>
-    <div class="bottom-label">
-      <p class="bottom-name">by Neast</p>
-      <p class="bottom-desc">Empresa dedicada al diseño y desarrollo de componentes MTB.</p>
-    </div>
-    <div class="bottom-label"></div>
-    <div class="bottom-label">
-      <p class="bottom-name">Konatec</p>
-      <p class="bottom-desc">Rediseño de máquinas de ingeniería.</p>
-    </div>
-  </div>
-
-  <div class="bottom-labels reveal" style="margin-top: 8px;">
-    <div class="bottom-label"></div>
-    <div class="bottom-label">
-      <p class="bottom-name">Cambridge & José Cruz</p>
-      <p class="bottom-desc">Diseño y fabricación de espacio para exhibición internacional.</p>
-    </div>
-    <div class="bottom-label">
-      <p class="bottom-name">Refugio Prisma</p>
-      <p class="bottom-desc">Diseño de espacios arquitectónicos.</p>
-    </div>
-    <div class="bottom-label"></div>
-  </div>
-
+  <div class="mobile-counter"><span id="mobileCurrentPage">1</span> / 7</div>
 </div>
 
 <script>
-  const reveals = document.querySelectorAll('.reveal');
+  /* Desktop pill reveal */
   const pills = document.querySelectorAll('.pill-card');
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) entry.target.classList.add('visible');
-    });
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
   }, { threshold: 0.05 });
+  pills.forEach(p => obs.observe(p));
 
-  reveals.forEach(el => observer.observe(el));
-  pills.forEach(el => observer.observe(el));
+  /* Mobile slider */
+  const slides      = document.getElementById('mobileSlides');
+  const counterEl   = document.getElementById('mobileCurrentPage');
+  const totalMobile = 7;
+  let mobileIndex   = 0;
+
+  let touchStartX = 0;
+  slides.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+  slides.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) < 40) return;
+    if (dx < 0 && mobileIndex < totalMobile - 1) mobileIndex++;
+    if (dx > 0 && mobileIndex > 0) mobileIndex--;
+    slides.style.transform = `translateX(-${mobileIndex * 100}%)`;
+    counterEl.textContent = mobileIndex + 1;
+  });
+
+  /* Prevent link click during swipe */
+  let swiping = false;
+  slides.addEventListener('touchmove', () => { swiping = true; });
+  slides.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', e => { if (swiping) { e.preventDefault(); } swiping = false; });
+  });
 </script>
 </body>
 </html>

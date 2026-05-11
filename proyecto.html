@@ -2,420 +2,335 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Proyecto — Cristóbal Ogrodnik</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,600;0,700;0,800;1,300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,600;0,700;0,800&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body {
-  font-family: 'Montserrat', sans-serif;
-  background: #111111;
-  color: #ffffff;
-  width: 100%; height: 100%;
-  overflow: hidden;
-}
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html, body { width:100%; height:100%; font-family:'Montserrat',sans-serif; background:#0d0d0d; color:#fff; overflow:hidden; }
 
-/* ═══════════════════════════════════════
-   PRESENTATION VIEWER (desktop & landscape mobile)
-═══════════════════════════════════════ */
+/* ═══════════════════════════════════
+   VIEWER
+═══════════════════════════════════ */
 #viewer {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  background: #0d0d0d;
+  position:fixed; inset:0;
+  display:flex; flex-direction:column;
+  background:#0d0d0d;
+  transition:opacity .3s ease;
 }
 
-/* Top bar */
-.viewer-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 32px;
-  background: rgba(0,0,0,0.4);
-  backdrop-filter: blur(8px);
-  z-index: 10;
+/* TOP BAR — hidden by default, shows on mouse move */
+#topbar {
+  position:absolute; top:0; left:0; right:0;
+  padding:18px 28px;
+  display:flex; align-items:center; justify-content:space-between;
+  background:linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%);
+  z-index:20;
+  opacity:0; transition:opacity .3s ease;
+  pointer-events:none;
 }
+#topbar.visible { opacity:1; pointer-events:all; }
 
-.project-title {
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #fff;
+.proj-title { font-size:13px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; }
+
+.topbar-right { display:flex; gap:10px; align-items:center; }
+
+.icon-btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25);
+  color:#fff; font-family:'Montserrat',sans-serif; font-size:11px; font-weight:600;
+  letter-spacing:0.07em; padding:8px 16px; border-radius:4px; cursor:pointer;
+  text-decoration:none; transition:background .2s;
 }
+.icon-btn:hover { background:rgba(255,255,255,0.22); }
+.icon-btn svg { width:14px; height:14px; flex-shrink:0; }
 
-.close-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.3);
-  color: #fff;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  padding: 8px 18px;
-  border-radius: 4px;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background 0.2s ease;
-}
-.close-btn:hover { background: rgba(255,255,255,0.1); }
-
-/* Image area */
+/* SLIDES AREA */
 .slides-area {
-  flex: 1;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  flex:1; position:relative;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden; cursor:none;
 }
 
 .slide {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  padding: 20px 80px;
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; transition:opacity .35s ease;
+  padding:48px 72px;
 }
-.slide.active { opacity: 1; z-index: 2; }
+.slide.active { opacity:1; z-index:2; }
+.slide img { max-width:100%; max-height:100%; object-fit:contain; display:block; }
 
-.slide img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  display: block;
-}
-
-/* Navigation arrows */
+/* NAV ARROWS — hidden, appear on mouse move */
 .nav-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 5;
-  transition: background 0.2s ease, transform 0.2s ease;
+  position:absolute; top:50%; transform:translateY(-50%);
+  width:52px; height:52px; border-radius:50%;
+  background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.25);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; z-index:5;
+  transition:background .2s, transform .2s, opacity .3s;
+  opacity:0;
 }
-.nav-arrow:hover { background: rgba(255,255,255,0.2); transform: translateY(-50%) scale(1.06); }
-.nav-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
-.nav-arrow.left  { left: 18px; }
-.nav-arrow.right { right: 18px; }
-.nav-arrow svg { width: 20px; height: 20px; }
+.nav-arrow.visible { opacity:1; }
+.nav-arrow:hover { background:rgba(255,255,255,0.22); transform:translateY(-50%) scale(1.06); }
+.nav-arrow:disabled { opacity:0!important; pointer-events:none; }
+.nav-arrow.left { left:18px; }
+.nav-arrow.right { right:18px; }
+.nav-arrow svg { width:20px; height:20px; }
 
-/* Bottom bar */
-.viewer-bottombar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px 32px;
-  background: rgba(0,0,0,0.4);
-  backdrop-filter: blur(8px);
-  z-index: 10;
+/* BOTTOM BAR — hidden, shows on mouse move */
+#bottombar {
+  position:absolute; bottom:0; left:0; right:0;
+  padding:20px 28px;
+  display:flex; align-items:center; justify-content:center; gap:24px;
+  background:linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+  z-index:20;
+  opacity:0; transition:opacity .3s ease;
+  pointer-events:none;
 }
+#bottombar.visible { opacity:1; pointer-events:all; }
 
-.page-counter {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.15em;
-  color: rgba(255,255,255,0.7);
+.page-counter { font-size:12px; font-weight:600; letter-spacing:0.18em; color:rgba(255,255,255,0.65); }
+.page-counter .cur { color:#fff; font-weight:700; }
+
+.next-project-btn {
+  display:none;
+  align-items:center; gap:8px;
+  background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3);
+  color:#fff; font-family:'Montserrat',sans-serif; font-size:11px; font-weight:600;
+  letter-spacing:0.07em; padding:9px 20px; border-radius:4px; cursor:pointer;
+  transition:background .2s;
 }
-.page-counter .current { color: #fff; font-weight: 700; }
+.next-project-btn:hover { background:rgba(255,255,255,0.25); }
+.next-project-btn.show { display:inline-flex; }
+.next-project-btn svg { width:14px; height:14px; }
 
-/* ═══════════════════════════════════════
-   FLIP PROMPT (mobile portrait only)
-═══════════════════════════════════════ */
+/* FULLSCREEN overlay — just uses browser fullscreen API */
+
+/* ═══════════════════════════════════
+   FLIP PROMPT (mobile portrait)
+═══════════════════════════════════ */
 #flip-prompt {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  background: #0d0d0d;
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 40px 20px;
+  position:fixed; inset:0; z-index:100;
+  background:#0d0d0d;
+  display:none; flex-direction:column;
+  align-items:center; justify-content:center;
+  text-align:center; padding:40px 24px;
 }
-#flip-prompt.show { display: flex; }
+#flip-prompt.show { display:flex; }
 
-.phone-icon {
-  width: 80px;
-  height: 130px;
-  border: 3px solid #fff;
-  border-radius: 12px;
-  position: relative;
-  margin-bottom: 40px;
-  animation: flip-rotate 2s ease-in-out infinite;
+.phone-anim {
+  width:70px; height:115px;
+  border:3px solid #fff; border-radius:10px;
+  position:relative; margin-bottom:36px;
+  animation:doFlip 2.2s ease-in-out infinite;
 }
-.phone-icon::before {
-  content: '';
-  position: absolute;
-  top: 8px; left: 50%;
-  transform: translateX(-50%);
-  width: 30px; height: 4px;
-  background: rgba(255,255,255,0.4);
-  border-radius: 2px;
-}
-.phone-icon::after {
-  content: '';
-  position: absolute;
-  bottom: 8px; left: 50%;
-  transform: translateX(-50%);
-  width: 18px; height: 18px;
-  border: 2px solid rgba(255,255,255,0.4);
-  border-radius: 50%;
+.phone-anim::before { content:''; position:absolute; top:7px; left:50%; transform:translateX(-50%); width:28px; height:3px; background:rgba(255,255,255,0.35); border-radius:2px; }
+.phone-anim::after  { content:''; position:absolute; bottom:7px; left:50%; transform:translateX(-50%); width:16px; height:16px; border:2px solid rgba(255,255,255,0.35); border-radius:50%; }
+
+@keyframes doFlip {
+  0%,35%  { transform:rotate(0deg); }
+  65%,100%{ transform:rotate(-90deg); }
 }
 
-@keyframes flip-rotate {
-  0%   { transform: rotate(0deg); }
-  40%  { transform: rotate(0deg); }
-  70%  { transform: rotate(-90deg); }
-  100% { transform: rotate(-90deg); }
-}
+.flip-title { font-size:17px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:10px; }
+.flip-msg   { font-size:12px; font-weight:300; color:rgba(255,255,255,0.6); line-height:1.7; max-width:260px; margin-bottom:28px; }
+.flip-continue { background:#ede8dc; color:#2d2d2d; border:none; padding:11px 28px; font-family:'Montserrat',sans-serif; font-size:11px; font-weight:600; letter-spacing:0.07em; border-radius:4px; cursor:pointer; }
 
-.flip-title {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #fff;
-  margin-bottom: 12px;
+/* Mobile landscape — show viewer rotated correctly */
+@media (max-width:900px) and (orientation:portrait) {
+  #viewer { display:none; }
+  #flip-prompt { display:flex; }
 }
-
-.flip-msg {
-  font-size: 13px;
-  font-weight: 300;
-  color: rgba(255,255,255,0.65);
-  line-height: 1.7;
-  max-width: 280px;
-  margin-bottom: 32px;
+@media (max-width:900px) and (orientation:portrait) {
+  body.flip-dismissed #flip-prompt { display:none; }
+  body.flip-dismissed #viewer      { display:flex; }
 }
-
-.flip-continue {
-  background: #ede8dc;
-  color: #2d2d2d;
-  border: none;
-  padding: 12px 32px;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-/* Responsive */
-@media (max-width: 700px) {
-  .slide { padding: 12px; }
-  .nav-arrow { width: 42px; height: 42px; }
-  .nav-arrow.left { left: 10px; }
-  .nav-arrow.right { right: 10px; }
-  .viewer-topbar { padding: 14px 18px; }
-  .viewer-bottombar { padding: 12px 18px; }
-  .project-title { font-size: 11px; }
-}
-
-/* When phone is in portrait orientation on mobile, show flip prompt and hide viewer */
-@media (max-width: 900px) and (orientation: portrait) {
-  #viewer { display: none; }
-  #flip-prompt { display: flex; }
-}
-@media (max-width: 900px) and (orientation: portrait) {
-  #flip-prompt.dismissed { display: none; }
-  #flip-prompt.dismissed ~ #viewer,
-  body.flip-dismissed #viewer { display: flex; }
+/* In landscape on mobile — viewer fills screen, image fills correctly */
+@media (max-width:900px) and (orientation:landscape) {
+  #flip-prompt { display:none; }
+  #viewer      { display:flex; }
+  .slide { padding:40px 60px; }
 }
 </style>
 </head>
 <body>
 
-<!-- FLIP PROMPT (mobile portrait) -->
 <div id="flip-prompt">
-  <div class="phone-icon"></div>
+  <div class="phone-anim"></div>
   <h2 class="flip-title">Gira tu teléfono</h2>
-  <p class="flip-msg">Para una mejor experiencia, gira tu dispositivo a modo horizontal y disfruta del proyecto.</p>
+  <p class="flip-msg">Para una mejor experiencia, gira tu dispositivo a modo horizontal.</p>
   <button class="flip-continue" onclick="dismissFlip()">Continuar igual</button>
 </div>
 
-<!-- VIEWER -->
 <div id="viewer">
-  <header class="viewer-topbar">
-    <div class="project-title" id="projTitle">PROYECTO</div>
-    <a href="proyectos.html" class="close-btn">
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-        <path d="M2 2L10 10M2 10L10 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      </svg>
-      Cerrar
-    </a>
-  </header>
+  <div id="topbar">
+    <div class="proj-title" id="projTitle">PROYECTO</div>
+    <div class="topbar-right">
+      <button class="icon-btn" id="fullscreenBtn" onclick="toggleFullscreen()">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M2 5V2h3M11 2h3v3M2 11v3h3M14 11v3h-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Pantalla completa
+      </button>
+      <a href="proyectos.html" class="icon-btn">
+        <svg viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M2 12L12 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Cerrar
+      </a>
+    </div>
+  </div>
 
   <div class="slides-area" id="slidesArea">
-    <!-- Slides injected by JS -->
-
-    <button class="nav-arrow left" id="prevBtn" aria-label="Anterior">
-      <svg viewBox="0 0 20 20" fill="none">
-        <path d="M13 4L7 10L13 16" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+    <button class="nav-arrow left" id="prevBtn">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M13 4L7 10L13 16" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
-    <button class="nav-arrow right" id="nextBtn" aria-label="Siguiente">
-      <svg viewBox="0 0 20 20" fill="none">
-        <path d="M7 4L13 10L7 16" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+    <button class="nav-arrow right" id="nextBtn">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M7 4L13 10L7 16" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
   </div>
 
-  <footer class="viewer-bottombar">
-    <div class="page-counter">
-      <span class="current" id="currentPage">1</span> / <span id="totalPages">1</span>
-    </div>
-  </footer>
+  <div id="bottombar">
+    <div class="page-counter"><span class="cur" id="curPage">1</span> / <span id="totPage">1</span></div>
+    <button class="next-project-btn" id="nextProjBtn">
+      Siguiente proyecto
+      <svg viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
 </div>
 
 <script>
-  // ─── Project definitions ───
-  const PROJECTS = {
-    muds: {
-      title: 'MUDS',
-      slides: [
-        'proyectos-img/MUDS_1.jpg',
-        'proyectos-img/MUDS_2.jpg'
-      ]
-    },
-    neast: {
-      title: 'by Neast',
-      slides: [
-        'proyectos-img/Neast_1.jpg',
-        'proyectos-img/Neast_2.jpg'
-      ]
-    },
-    lontra: {
-      title: 'Lontra Platform',
-      slides: [
-        'proyectos-img/Lontra_Platform_01.jpg',
-        'proyectos-img/Lontra_Platform_02.jpg',
-        'proyectos-img/Lontra_Platform_03.jpg'
-      ]
-    },
-    konatec: {
-      title: 'Konatec',
-      slides: [
-        'proyectos-img/Konatec_01.jpg',
-        'proyectos-img/Konatec_02.jpg'
-      ]
-    },
-    copihue: {
-      title: 'Espacio Copihue',
-      slides: [
-        'proyectos-img/Espacio_Copihue_01.jpg',
-        'proyectos-img/Espacio_Copihue_02.jpg'
-      ]
-    },
-    cambridge: {
-      title: 'Cambridge & José Cruz',
-      slides: [
-        'proyectos-img/Cambridge_01.jpg',
-        'proyectos-img/Cambridge_03.jpg',
-        'proyectos-img/Cambridge_04.jpg'
-      ]
-    },
-    refugio: {
-      title: 'Refugio Prisma',
-      slides: [
-        'proyectos-img/Refugio_Prisma_01.jpg',
-        'proyectos-img/Refugio_Prisma_02.jpg'
-      ]
+/* ─── Project data ─── */
+const PROJECTS = [
+  { key:'muds',      title:'MUDS',                 slides:['proyectos-img/MUDS_1.jpg','proyectos-img/MUDS_2.jpg'] },
+  { key:'neast',     title:'by Neast',              slides:['proyectos-img/Neast_1.jpg','proyectos-img/Neast_2.jpg'] },
+  { key:'lontra',    title:'Lontra Platform',       slides:['proyectos-img/Lontra_Platform_01.jpg','proyectos-img/Lontra_Platform_02.jpg','proyectos-img/Lontra_Platform_03.jpg'] },
+  { key:'konatec',   title:'Konatec',               slides:['proyectos-img/Konatec_01.jpg','proyectos-img/Konatec_02.jpg'] },
+  { key:'copihue',   title:'Espacio Copihue',       slides:['proyectos-img/Espacio_Copihue_01.jpg','proyectos-img/Espacio_Copihue_02.jpg'] },
+  { key:'cambridge', title:'Cambridge & José Cruz', slides:['proyectos-img/Cambridge_01.jpg','proyectos-img/Cambridge_03.jpg','proyectos-img/Cambridge_04.jpg'] },
+  { key:'refugio',   title:'Refugio Prisma',        slides:['proyectos-img/Refugio_Prisma_01.jpg','proyectos-img/Refugio_Prisma_02.jpg'] }
+];
+
+/* ─── Init current project ─── */
+const params     = new URLSearchParams(window.location.search);
+const key        = params.get('p') || 'muds';
+const projIndex  = PROJECTS.findIndex(p => p.key === key);
+const project    = PROJECTS[projIndex] || PROJECTS[0];
+const nextProj   = PROJECTS[projIndex + 1] || null;
+
+document.getElementById('projTitle').textContent = project.title;
+document.title = project.title + ' — Cristóbal Ogrodnik';
+document.getElementById('totPage').textContent = project.slides.length;
+
+/* Build slides */
+const slidesArea = document.getElementById('slidesArea');
+const prevBtn    = document.getElementById('prevBtn');
+const nextBtn    = document.getElementById('nextBtn');
+
+project.slides.forEach((src, i) => {
+  const div = document.createElement('div');
+  div.className = 'slide' + (i === 0 ? ' active' : '');
+  div.innerHTML = `<img src="${src}" alt="${project.title} ${i+1}">`;
+  slidesArea.insertBefore(div, prevBtn);
+});
+
+const allSlides   = document.querySelectorAll('.slide');
+const curPageEl   = document.getElementById('curPage');
+const nextProjBtn = document.getElementById('nextProjBtn');
+let currentIndex  = 0;
+
+function showSlide(i) {
+  allSlides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+  curPageEl.textContent = i + 1;
+  prevBtn.disabled = (i === 0);
+  // Show "next project" on last slide
+  if (i === allSlides.length - 1 && nextProj) {
+    nextProjBtn.classList.add('show');
+  } else {
+    nextProjBtn.classList.remove('show');
+  }
+}
+
+prevBtn.addEventListener('click', () => { if (currentIndex > 0) { currentIndex--; showSlide(currentIndex); } });
+nextBtn.addEventListener('click', () => { if (currentIndex < allSlides.length - 1) { currentIndex++; showSlide(currentIndex); } });
+
+nextProjBtn.addEventListener('click', () => {
+  if (nextProj) window.location.href = `proyecto.html?p=${nextProj.key}`;
+});
+
+/* Keyboard */
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft'  && currentIndex > 0) { currentIndex--; showSlide(currentIndex); }
+  if (e.key === 'ArrowRight' && currentIndex < allSlides.length - 1) { currentIndex++; showSlide(currentIndex); }
+  if (e.key === 'Escape') window.location.href = 'proyectos.html';
+  if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+});
+
+/* Touch swipe */
+let tx = 0;
+slidesArea.addEventListener('touchstart', e => { tx = e.touches[0].clientX; });
+slidesArea.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tx;
+  if (Math.abs(dx) < 40) return;
+  if (dx < 0 && currentIndex < allSlides.length - 1) { currentIndex++; showSlide(currentIndex); }
+  if (dx > 0 && currentIndex > 0) { currentIndex--; showSlide(currentIndex); }
+});
+
+showSlide(0);
+
+/* ─── Auto-hide UI on mouse idle ─── */
+const topbar   = document.getElementById('topbar');
+const bottombar = document.getElementById('bottombar');
+const arrows   = document.querySelectorAll('.nav-arrow');
+let hideTimer;
+
+function showUI() {
+  topbar.classList.add('visible');
+  bottombar.classList.add('visible');
+  arrows.forEach(a => a.classList.add('visible'));
+  document.body.style.cursor = '';
+  clearTimeout(hideTimer);
+  hideTimer = setTimeout(hideUI, 2500);
+}
+
+function hideUI() {
+  topbar.classList.remove('visible');
+  bottombar.classList.remove('visible');
+  arrows.forEach(a => a.classList.remove('visible'));
+  document.body.style.cursor = 'none';
+}
+
+document.addEventListener('mousemove', showUI);
+document.addEventListener('touchstart', showUI);
+showUI();
+
+/* ─── Fullscreen ─── */
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen();
+  }
+}
+document.addEventListener('fullscreenchange', () => {
+  const btn = document.getElementById('fullscreenBtn');
+  if (document.fullscreenElement) {
+    btn.innerHTML = `<svg viewBox="0 0 16 16" fill="none"><path d="M5 2H2v3M11 2h3v3M2 11v3h3M14 11v3h-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Salir`;
+  } else {
+    btn.innerHTML = `<svg viewBox="0 0 16 16" fill="none"><path d="M2 5V2h3M11 2h3v3M2 11v3h3M14 11v3h-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Pantalla completa`;
+  }
+});
+
+/* ─── Mobile flip dismiss ─── */
+function dismissFlip() {
+  document.body.classList.add('flip-dismissed');
+}
+window.addEventListener('orientationchange', () => {
+  setTimeout(() => {
+    if (window.matchMedia('(orientation:landscape)').matches) {
+      document.getElementById('flip-prompt').style.display = 'none';
     }
-  };
-
-  // Get project from URL: proyecto.html?p=muds
-  const params = new URLSearchParams(window.location.search);
-  const projectKey = params.get('p') || 'muds';
-  const project = PROJECTS[projectKey] || PROJECTS.muds;
-
-  // Init
-  document.getElementById('projTitle').textContent = project.title;
-  document.getElementById('totalPages').textContent = project.slides.length;
-
-  const slidesArea = document.getElementById('slidesArea');
-  project.slides.forEach((src, i) => {
-    const slide = document.createElement('div');
-    slide.className = 'slide' + (i === 0 ? ' active' : '');
-    slide.innerHTML = `<img src="${src}" alt="${project.title} ${i+1}">`;
-    slidesArea.insertBefore(slide, slidesArea.firstChild);
-  });
-
-  let currentIndex = 0;
-  const slides = document.querySelectorAll('.slide');
-  const prevBtn = document.getElementById('prevBtn');
-  const nextBtn = document.getElementById('nextBtn');
-  const currentPageEl = document.getElementById('currentPage');
-
-  function showSlide(i) {
-    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
-    currentPageEl.textContent = i + 1;
-    prevBtn.disabled = (i === 0);
-    nextBtn.disabled = (i === slides.length - 1);
-  }
-
-  prevBtn.addEventListener('click', () => {
-    if (currentIndex > 0) { currentIndex--; showSlide(currentIndex); }
-  });
-  nextBtn.addEventListener('click', () => {
-    if (currentIndex < slides.length - 1) { currentIndex++; showSlide(currentIndex); }
-  });
-
-  // Keyboard navigation
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft'  && currentIndex > 0) { currentIndex--; showSlide(currentIndex); }
-    if (e.key === 'ArrowRight' && currentIndex < slides.length - 1) { currentIndex++; showSlide(currentIndex); }
-    if (e.key === 'Escape') window.location.href = 'proyectos.html';
-  });
-
-  // Touch swipe support
-  let touchStartX = 0;
-  slidesArea.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
-  slidesArea.addEventListener('touchend', (e) => {
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    if (Math.abs(dx) < 50) return;
-    if (dx > 0 && currentIndex > 0) { currentIndex--; showSlide(currentIndex); }
-    if (dx < 0 && currentIndex < slides.length - 1) { currentIndex++; showSlide(currentIndex); }
-  });
-
-  showSlide(0);
-
-  // Dismiss flip prompt (user choice to continue in portrait)
-  function dismissFlip() {
-    document.getElementById('flip-prompt').classList.add('dismissed');
-    document.body.classList.add('flip-dismissed');
-    document.getElementById('viewer').style.display = 'flex';
-  }
-
-  // Hide flip prompt when device rotates to landscape
-  window.addEventListener('orientationchange', () => {
-    setTimeout(() => {
-      if (window.matchMedia('(orientation: landscape)').matches) {
-        const fp = document.getElementById('flip-prompt');
-        fp.classList.add('dismissed');
-      }
-    }, 200);
-  });
+  }, 200);
+});
 </script>
-
 </body>
 </html>

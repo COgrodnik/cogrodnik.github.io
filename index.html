@@ -12,10 +12,12 @@
 html { overflow-x: hidden; }
 body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
 
-#spacer { height: 400vh; }
+/* Spacer drives the scroll — hero travel = 1×vh, then about is revealed */
+/* We only need enough scroll to fully reveal the about section */
+#spacer { height: 200vh; }
 
 /* ═══════════════════════════════════════
-   LAYER 1 — ABOUT  (fondo, z-index 1)
+   LAYER 1 — ABOUT  (z-index 1, bottom)
 ═══════════════════════════════════════ */
 #about {
   position: fixed;
@@ -37,13 +39,13 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
 .mini-chevron { position: absolute; top: 20px; right: 52px; z-index: 3; cursor: pointer; }
 .mini-chevron svg { width: 17px; height: 17px; }
 
-/* Layout centrado horizontalmente */
+/* Flex layout: text left | photo right, centred vertically */
 .about-inner {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
-  justify-content: center;   /* centrado horizontal */
+  justify-content: center;
   padding: 60px 52px 40px;
   gap: 52px;
   max-width: 1200px;
@@ -53,7 +55,6 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   width: 100%;
 }
 
-/* Columna texto */
 .about-text {
   flex: 1;
   min-width: 0;
@@ -66,20 +67,10 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   font-weight: 700; color: #1a1a1a;
   line-height: 1; margin-bottom: 20px;
 }
-.about-name-h {
-  font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px;
-}
-.about-degree {
-  font-size: 11px; color: #888; line-height: 1.6; margin-bottom: 12px;
-}
-.cream-mid {
-  width: 100%; height: 8px;
-  background: #faf5ec; border-radius: 4px;
-  margin-bottom: 12px;
-}
-.about-p {
-  font-size: 11px; color: #555; line-height: 1.75; margin-bottom: 8px;
-}
+.about-name-h { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+.about-degree { font-size: 11px; color: #888; line-height: 1.6; margin-bottom: 12px; }
+.cream-mid { width: 100%; height: 8px; background: #faf5ec; border-radius: 4px; margin-bottom: 12px; }
+.about-p { font-size: 11px; color: #555; line-height: 1.75; margin-bottom: 8px; }
 
 .cta-row { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
 .btn {
@@ -93,12 +84,7 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
 .btn-dark  { background: #2d2d2d; color: #fff; }
 .btn-cream { background: #ede8dc; color: #4a4a4a; }
 
-/* Columna foto */
-.photo-col {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-}
+.photo-col { flex-shrink: 0; display: flex; align-items: center; }
 .photo-circle {
   width: 300px; height: 300px;
   border-radius: 50%; overflow: hidden;
@@ -116,38 +102,22 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   letter-spacing:0.06em; text-align:center; padding:24px;
 }
 
-/* Flecha inicio (abajo, aparece al final del scroll) */
+/* Arrow up — appears at end of scroll */
 #arrow-up {
-  position: fixed;
-  bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 30;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .3s ease;
-  background: none; border: none;
-  font-family: 'Montserrat', sans-serif;
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+  z-index: 30; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .3s ease;
+  background: none; border: none; font-family: 'Montserrat', sans-serif;
 }
 #arrow-up.show { opacity: 1; pointer-events: all; }
-.arrow-up-label {
-  font-size: 11px; font-weight: 300; font-style: italic;
-  color: rgba(0,0,0,0.4); letter-spacing: 0.1em;
-}
+.arrow-up-label { font-size: 11px; font-weight: 300; font-style: italic; color: rgba(0,0,0,0.4); letter-spacing: 0.1em; }
 #arrow-up svg { width: 18px; height: 18px; animation: bounceUp 2.2s ease-in-out infinite; }
 
 /* ═══════════════════════════════════════
-   LAYER 2 — HERO  (encima, z-index 10)
+   LAYER 2 — HERO  (z-index 10, top)
 ═══════════════════════════════════════ */
 #hero {
-  position: fixed;
-  inset: 0;
-  z-index: 10;
+  position: fixed; inset: 0; z-index: 10;
   background:
     radial-gradient(ellipse at 18% 82%, #2c2c2c 0%, transparent 52%),
     radial-gradient(ellipse at 82% 18%, #222 0%, transparent 48%),
@@ -156,6 +126,7 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
 }
 
 .hero-logo { position:absolute; top:36px; left:52px; font-size:13px; font-weight:800; letter-spacing:0.1em; color:#fff; }
+.hero-logo img { height: 32px; width: auto; display: block; }
 
 .hero-center { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; }
 .hero-subtitle { font-size:15px; font-weight:300; font-style:italic; letter-spacing:0.1em; color:rgba(255,255,255,0.52); margin-bottom:2px; }
@@ -163,31 +134,18 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
 .hero-web { font-size:clamp(24px,3.6vw,44px); font-weight:300; font-style:italic; color:rgba(255,255,255,0.72); text-align:right; margin-top:6px; }
 
 .hero-bottom { position:absolute; bottom:36px; left:52px; right:52px; display:flex; align-items:flex-end; justify-content:space-between; }
-
-/* NOMBRE — en móvil se parte en 2 líneas para no chocar con desliza */
-.hero-name {
-  font-size: 11px; font-weight: 800; letter-spacing: 0.22em;
-  text-transform: uppercase; color: #fff; line-height: 1.4;
-}
+.hero-name { font-size:11px; font-weight:800; letter-spacing:0.22em; text-transform:uppercase; color:#fff; line-height:1.4; }
 .hero-name span { font-weight:400; color:rgba(255,255,255,0.38); margin-left:4px; }
-
-.desliza-group {
-  position: absolute; left: 50%; bottom: 0;
-  transform: translateX(-50%);
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-}
+.desliza-group { position:absolute; left:50%; bottom:0; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:4px; }
 .desliza-label { font-size:11px; font-weight:300; font-style:italic; color:rgba(255,255,255,0.42); letter-spacing:0.1em; }
 .desliza-group svg { width:18px; height:18px; animation:bounceDown 2.2s ease-in-out infinite; }
 .hero-year { font-size:11px; font-weight:300; letter-spacing:0.2em; color:rgba(255,255,255,0.38); }
 
-/* Barra nombre sticky */
+/* Name bar */
 #name-bar {
   position:fixed; top:0; left:0; right:0; z-index:20;
   padding:18px 52px; display:flex; justify-content:space-between; align-items:center;
-  background:
-    radial-gradient(ellipse at 18% 82%,#2c2c2c 0%,transparent 52%),
-    radial-gradient(ellipse at 82% 18%,#222 0%,transparent 48%),
-    #111111;
+  background: radial-gradient(ellipse at 18% 82%,#2c2c2c 0%,transparent 52%), radial-gradient(ellipse at 82% 18%,#222 0%,transparent 48%), #111111;
   color:#fff; opacity:0; pointer-events:none; transition:opacity .3s ease;
 }
 #name-bar.show { opacity:1; pointer-events:all; }
@@ -195,51 +153,29 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
 .bar-name span { font-weight:400; color:rgba(255,255,255,0.38); margin-left:10px; }
 .bar-year { font-size:11px; font-weight:300; letter-spacing:0.2em; color:rgba(255,255,255,0.38); }
 
-/* Animaciones */
 @keyframes bounceDown { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
 @keyframes bounceUp   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
 
-/* ═══════════════════════════════════════
-   RESPONSIVE — MÓVIL
-═══════════════════════════════════════ */
-@media (max-width: 700px) {
-  /* About: foto arriba, texto abajo, todo centrado */
-  .about-inner {
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    padding: 80px 24px 40px;
-    gap: 20px;
-    overflow-y: auto;
-    transform: none;
-    left: 0;
-  }
-
-  .photo-col { order: -1; } /* foto primero */
+/* ═══ RESPONSIVE ═══ */
+@media (max-width: 900px) {
+  .about-inner { padding: 0 28px; gap: 28px; }
+  .photo-circle { width: 240px; height: 240px; }
+  .cream-top { left: 28px; }
+  .mini-chevron { right: 28px; }
+  .hero-logo { left: 28px; }
+  .hero-bottom { left: 28px; right: 28px; }
+  #name-bar { padding: 18px 28px; }
+}
+@media (max-width: 600px) {
+  .about-inner { flex-direction: column; justify-content: flex-start; align-items: center; padding: 80px 24px 40px; gap: 20px; overflow-y: auto; transform: none; left: 0; }
+  .photo-col { order: -1; }
   .photo-circle { width: 160px; height: 160px; }
-
-  .about-text {
-    max-width: 100%;
-    text-align: left;
-  }
-
+  .about-text { max-width: 100%; }
   .hola-title { font-size: 38px; margin-bottom: 14px; }
   .about-name-h { font-size: 13px; }
-  .about-degree { font-size: 10px; }
-  .about-p { font-size: 10px; margin-bottom: 6px; }
+  .about-degree, .about-p { font-size: 10px; }
   .btn { padding: 10px 24px; font-size: 11px; }
-
-  .cream-top { left: 24px; width: 70%; }
-  .mini-chevron { right: 24px; }
-
-  /* Hero móvil: nombre en 2 líneas para no chocar con desliza */
-  .hero-name {
-    font-size: 9px;
-    letter-spacing: 0.15em;
-    line-height: 1.5;
-    max-width: 30vw; /* fuerza salto de línea */
-    word-break: break-word;
-  }
+  .hero-name { font-size: 9px; letter-spacing: 0.15em; max-width: 30vw; word-break: break-word; }
   .hero-logo { left: 20px; top: 24px; font-size: 11px; }
   .hero-bottom { left: 20px; right: 20px; bottom: 28px; }
   .hero-year { font-size: 9px; }
@@ -248,20 +184,14 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
 </style>
 </head>
 <body>
-
 <div id="spacer"></div>
 
-<!-- LAYER 1: About -->
 <section id="about">
   <div class="cream-top"></div>
   <div class="mini-chevron" onclick="window.scrollTo({top:0,behavior:'smooth'})">
-    <svg viewBox="0 0 18 18" fill="none">
-      <path d="M3 6L9 12L15 6" stroke="#c8c8c8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
+    <svg viewBox="0 0 18 18" fill="none"><path d="M3 6L9 12L15 6" stroke="#c8c8c8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </div>
-
   <div class="about-inner">
-    <!-- Texto -->
     <div class="about-text">
       <h2 class="hola-title">¡HOLA!</h2>
       <h3 class="about-name-h">Mi nombre es Cristóbal Ogrodnik Bert</h3>
@@ -273,11 +203,9 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
       <p class="about-p">Además, paralelamente también llevo un par de años desarrollándome en la fotografía y filmmaking.</p>
       <div class="cta-row">
         <a href="proyectos.html" class="btn btn-dark">Proyectos</a>
-        <a href="resumen.html"   class="btn btn-cream">Más</a>
+        <a href="resumen.html" class="btn btn-cream">Más</a>
       </div>
     </div>
-
-    <!-- Foto -->
     <div class="photo-col">
       <div class="photo-circle">
         <!-- <img src="foto.jpg" alt="Cristóbal Ogrodnik"> -->
@@ -287,17 +215,15 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   </div>
 </section>
 
-<!-- Flecha inicio (aparece al llegar al final del scroll) -->
 <button id="arrow-up" onclick="window.scrollTo({top:0,behavior:'smooth'})">
   <span class="arrow-up-label">inicio</span>
-  <svg viewBox="0 0 18 18" fill="none">
-    <path d="M15 12L9 6L3 12" stroke="rgba(0,0,0,0.4)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>
+  <svg viewBox="0 0 18 18" fill="none"><path d="M15 12L9 6L3 12" stroke="rgba(0,0,0,0.4)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
 </button>
 
-<!-- LAYER 2: Hero -->
 <section id="hero">
-  <div class="hero-logo">"LOGO "</div>
+  <div class="hero-logo">"LOGO "
+    <!-- <img src="logo.png" alt="Logo"> -->
+  </div>
   <div class="hero-center">
     <p class="hero-subtitle">Design engineer</p>
     <h1 class="hero-title-text">PORTFOLIO</h1>
@@ -307,15 +233,12 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
     <div class="hero-name">CRISTÓBAL<br>OGRODNIK <span>CL</span></div>
     <div class="desliza-group">
       <span class="desliza-label">desliza</span>
-      <svg viewBox="0 0 18 18" fill="none">
-        <path d="M3 6L9 12L15 6" stroke="rgba(255,255,255,0.52)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+      <svg viewBox="0 0 18 18" fill="none"><path d="M3 6L9 12L15 6" stroke="rgba(255,255,255,0.52)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
     <div class="hero-year">2026</div>
   </div>
 </section>
 
-<!-- Barra nombre -->
 <div id="name-bar">
   <div class="bar-name">CRISTÓBAL OGRODNIK <span>CL</span></div>
   <div class="bar-year">2026</div>
@@ -326,13 +249,8 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   const nameBar = document.getElementById('name-bar');
   const arrowUp = document.getElementById('arrow-up');
 
-  let currentY = 0;
-  let targetY  = 0;
-  const EASE   = 0.10;
-
-  // El scroll termina cuando el hero sale completamente (1 × vh)
-  // La flecha "inicio" aparece cuando el usuario llegó al fondo del spacer
-  const SPACER_H = 400; // vh units del spacer (400vh)
+  let currentY = 0, targetY = 0;
+  const EASE = 0.10;
 
   function lerp(a, b, t) { return a + (b - a) * t; }
 
@@ -341,23 +259,20 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
     const scrollY = window.scrollY;
     const maxScroll = document.body.scrollHeight - vh;
 
+    // Hero slides up exactly 1×vh then stops
     targetY  = Math.min(scrollY, vh);
     currentY = lerp(currentY, targetY, EASE);
-
     hero.style.transform = 'translateY(-' + currentY.toFixed(2) + 'px)';
 
-    // Barra nombre: cuando hero casi salió
     nameBar.classList.toggle('show', currentY >= vh - 2);
 
-    // Flecha inicio: cuando el usuario llegó cerca del fondo del spacer
-    const nearBottom = scrollY >= maxScroll - vh * 0.3;
-    arrowUp.classList.toggle('show', nearBottom && currentY >= vh - 2);
+    // Arrow-up appears when fully scrolled down AND hero is gone
+    const atBottom = scrollY >= maxScroll - 20;
+    arrowUp.classList.toggle('show', atBottom && currentY >= vh - 2);
 
     requestAnimationFrame(tick);
   }
-
   requestAnimationFrame(tick);
 </script>
-
 </body>
 </html>
