@@ -27,14 +27,7 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   overflow: hidden;
 }
 
-.cream-top {
-  position: absolute;
-  top: 0; left: 52px;
-  width: 56%; height: 110px;
-  background: #faf5ec;
-  border-radius: 0 0 10px 10px;
-  z-index: 0;
-}
+
 
 .mini-chevron { position: absolute; top: 20px; right: 52px; z-index: 3; cursor: pointer; }
 .mini-chevron svg { width: 17px; height: 17px; }
@@ -47,8 +40,8 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   align-items: center;
   justify-content: center;
   padding: 60px 52px 40px;
-  gap: 52px;
-  max-width: 1200px;
+  gap: 40px;
+  max-width: 1300px;
   margin: 0 auto;
   left: 50%;
   transform: translateX(-50%);
@@ -71,7 +64,7 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
 }
 .about-name-h { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
 .about-degree { font-size: 11px; color: #888; line-height: 1.6; margin-bottom: 12px; }
-.cream-mid { width: 100%; height: 8px; background: #faf5ec; border-radius: 4px; margin-bottom: 12px; }
+
 .about-p { font-size: 11px; color: #555; line-height: 1.75; margin-bottom: 8px; }
 
 .cta-row { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
@@ -129,7 +122,7 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   bottom: -40px;
 }
 .photo-circle {
-  width: 300px; height: 300px;
+  width: 420px; height: 420px;
   border-radius: 50%; overflow: hidden;
   border: 6px solid #ffffff;
   box-shadow: 0 16px 48px rgba(0,0,0,0.28), 0 4px 16px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.10);
@@ -212,7 +205,7 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
 @media (max-width: 600px) {
   .about-inner { flex-direction: column; justify-content: flex-start; align-items: center; padding: 80px 24px 40px; gap: 20px; overflow-y: auto; transform: none; left: 0; }
   .photo-col { order: -1; }
-  .photo-circle { width: 160px; height: 160px; }
+  .photo-circle { width: 160px !important; height: 160px !important; }
   .about-text { max-width: 100%; }
   .hola-title { font-size: 38px; margin-bottom: 14px; }
   .about-name-h { font-size: 13px; }
@@ -258,13 +251,25 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   background: rgba(0,0,0,0.15);
 }
 
+
+/* Desktop: "scroll", Mobile: "desliza" via CSS */
+@media (max-width: 600px) {
+  #scrollLabel { font-size: 0 !important; }
+  #scrollLabel::after {
+    content: "desliza";
+    font-size: 11px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.42);
+    letter-spacing: 0.1em;
+  }
+}
 </style>
 </head>
 <body>
 <div id="spacer"></div>
 
 <section id="about">
-  <div class="cream-top"></div>
   <div class="mini-chevron" onclick="window.scrollTo({top:0,behavior:'smooth'})">
     <svg viewBox="0 0 18 18" fill="none"><path d="M3 6L9 12L15 6" stroke="#c8c8c8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </div>
@@ -273,11 +278,10 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
       <h2 class="hola-title">¡HOLA!</h2>
       <h3 class="about-name-h">Mi nombre es Cristóbal Ogrodnik Bert</h3>
       <p class="about-degree">Ingeniero en diseño con Master en Innovación y Diseño de la Universidad Adolfo Ibañez, Santiago, Chile.</p>
-      <div class="cream-mid"></div>
-      <p class="about-p">Soy amante de la creación de productos únicos, con impacto e identidad. Me apasiona ver cómo las cosas pasan del mundo de las ideas al físico, con todos los desafíos, aprendizajes y procesos conlleva lograrlo.</p>
-      <p class="about-p">Por otro lado, tengo alma emprendedora, siendo parte de distintos proyectos. Uno de los más destacados es Neast Components, empresa de componentes de seguridad para ciclistas de montaña, diseñamos productos únicos pensados en los ciclistas chilenos. Recientemente, comencé a desarrollar una marca de juguetes especializados para perros, llamada Yuki Pet.</p>
-      <p class="about-p">Me interesan mucho las herramientas de fabricación digital: Fabricación aditiva en todos sus formatos (SLA, SLS, FDM, etc), robótica y fabricación sustractiva (láser, CNC, etc). Tengo experiencia trabajando en el FabLab de la Diseño de la Universidad Adolfo Ibañez.</p>
-      <p class="about-p">Además, paralelamente también llevo un par de años desarrollándome en la fotografía y filmmaking.</p>
+      <p class="about-p">Soy amante de la creación de productos únicos, con impacto e identidad. Me apasiona ver cómo las cosas pasan del mundo de las ideas al físico, con todos los desafíos, aprendizajes y procesos que conlleva lograrlo.</p>
+      <p class="about-p">Por otro lado, tengo alma emprendedora, siendo parte de distintos proyectos. Uno de los más destacados es Neast Components, empresa de componentes de seguridad para ciclistas de montaña, en la que diseñamos productos únicos pensados en los ciclistas chilenos. Recientemente, comencé a desarrollar una marca de juguetes especializados para perros, llamada Yuki Pet.</p>
+      <p class="about-p">Me interesan mucho las herramientas de fabricación digital: Fabricación aditiva en todos sus formatos (SLA, SLS, FDM, etc), robótica y fabricación sustractiva (láser, CNC, etc). Tengo experiencia trabajando en el FabLab de la Diseño de la Universidad Adolfo Ibáñez.</p>
+      <p class="about-p">Paralelamente, también llevo un par de años desarrollándome en la fotografía y filmmaking.</p>
       <div class="cta-row">
         <a href="proyectos.html" class="btn btn-dark">Proyectos</a>
         <a href="resumen.html" class="btn btn-cream">Más</a>
@@ -322,8 +326,8 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   </div>
   <div class="hero-bottom">
     <div class="hero-name">CRISTÓBAL<br>OGRODNIK <span>CL</span></div>
-    <div class="desliza-group">
-      <span class="desliza-label">desliza</span>
+    <div class="desliza-group" onclick="scrollToAbout()" style="cursor:pointer;">
+      <span class="desliza-label" id="scrollLabel">scroll</span>
       <svg viewBox="0 0 18 18" fill="none"><path d="M3 6L9 12L15 6" stroke="rgba(255,255,255,0.52)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
     <div class="hero-year">2026</div>
@@ -344,6 +348,10 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   const EASE = 0.10;
 
   function lerp(a, b, t) { return a + (b - a) * t; }
+
+  function scrollToAbout() {
+    window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
+  }
 
   function tick() {
     const vh      = window.innerHeight;
