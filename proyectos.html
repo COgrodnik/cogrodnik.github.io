@@ -10,10 +10,10 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root { --dark:#1a1a1a; --white:#fff; --gray:#888; --btn-dark:#2d2d2d; --btn-cream:#d9d9d9; }
-body { font-family:'Montserrat',sans-serif; background:#fff; color:var(--dark); min-height:100vh; }
+body { font-family:'Montserrat',sans-serif; background:#fff; color:var(--dark); min-height:100vh; padding-bottom:60px; }
 
 .top-nav { display:flex; align-items:center; justify-content:space-between; padding:36px 8%; flex-wrap:wrap; gap:16px; }
-.page-title { font-family:'Shadows Into Light',cursive; font-size:clamp(44px,6vw,72px); font-weight:400; color:var(--dark); line-height:1; display:inline-block; transform:rotate(-2deg); }
+.page-title { font-family:'Shadows Into Light',cursive; font-size:clamp(52px,7vw,82px); font-weight: 400; color:var(--dark); line-height:1; display:inline-block; transform:rotate(-2deg); }
 .nav-buttons { display:flex; gap:12px; }
 .btn { display:inline-flex; align-items:center; justify-content:center; padding:12px 32px; font-family:'Montserrat',sans-serif; font-size:13px; font-weight:600; letter-spacing:0.04em; border-radius:4px; text-decoration:none; border:none; cursor:pointer; transition:transform .15s,opacity .15s; }
 .btn:hover { transform:translateY(-1px); opacity:.85; }
@@ -107,6 +107,29 @@ body { font-family:'Montserrat',sans-serif; background:#fff; color:var(--dark); 
   .mobile-projects  { display:block; }
   .top-nav { padding:24px 6%; }
 }
+
+/* ─── FOOTER ─── */
+#site-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 28px 52px 32px;
+  background: transparent;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  margin-top: 40px;
+}
+.footer-link {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: #444; text-decoration: none;
+  transition: color .2s ease, transform .2s ease;
+}
+.footer-link:hover { color: #000; transform: translateY(-2px); }
+.footer-link svg { width: 20px; height: 20px; flex-shrink: 0; }
+.footer-divider { width: 1px; height: 16px; background: rgba(0,0,0,0.15); }
+
 </style>
 </head>
 <body>
@@ -254,5 +277,20 @@ body { font-family:'Montserrat',sans-serif; background:#fff; color:var(--dark); 
     a.addEventListener('click', e => { if (moved) e.preventDefault(); });
   });
 </script>
+
+<footer id="site-footer">
+  <a href="https://www.instagram.com/cristobalogrodnik" target="_blank" rel="noopener" class="footer-link" aria-label="Instagram">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+  </a>
+  <div class="footer-divider"></div>
+  <a href="https://www.linkedin.com/in/cristobal-ogrodnik-bert-987a30190/" target="_blank" rel="noopener" class="footer-link" aria-label="LinkedIn">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+  </a>
+  <div class="footer-divider"></div>
+  <a href="mailto:cris.ogrodnik@gmail.com?subject=Hola%20Cristóbal" class="footer-link" aria-label="Email">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+  </a>
+</footer>
+
 </body>
 </html>
