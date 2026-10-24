@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Proyectos — Cristóbal Ogrodnik</title>
+<meta name="description" content="Proyectos de diseño de producto, fabricación digital y emprendimiento de Cristóbal Ogrodnik.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231a1a1a'/%3E%3Ctext x='32' y='43' font-family='Arial,Helvetica,sans-serif' font-size='28' font-weight='800' text-anchor='middle' fill='white'%3ECO%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,600;0,700;0,800&family=Shadows+Into+Light&display=swap" rel="stylesheet">
@@ -15,60 +18,59 @@ body { font-family:'Montserrat',sans-serif; background:#fff; color:var(--dark); 
 .top-nav { display:flex; align-items:center; justify-content:space-between; padding:36px 8%; flex-wrap:wrap; gap:16px; }
 .page-title { font-family:'Shadows Into Light',cursive; font-size:clamp(52px,7vw,82px); font-weight: 400; color:var(--dark); line-height:1; display:inline-block; transform:rotate(-2deg); }
 .nav-buttons { display:flex; gap:12px; }
-.btn { display:inline-flex; align-items:center; justify-content:center; padding:12px 32px; font-family:'Montserrat',sans-serif; font-size:13px; font-weight:600; letter-spacing:0.04em; border-radius:4px; text-decoration:none; border:none; cursor:pointer; transition:transform .15s,opacity .15s; }
+.btn { display:inline-flex; align-items:center; justify-content:center; padding:12px 32px; font-family:'Montserrat',sans-serif; font-size:13px; font-weight:600; letter-spacing:0.04em; border-radius:999px; text-decoration:none; border:none; cursor:pointer; transition:transform .15s,opacity .15s; }
 .btn:hover { transform:translateY(-1px); opacity:.85; }
 .btn-dark { background:var(--btn-dark); color:#fff; }
 .btn-light { background:#d9d9d9; color:#555; font-weight:600; }
 
-/* ═══ DESKTOP ═══ */
-.desktop-projects { padding:0 6% 80px; }
+/* ═══ BURBUJAS (compartido) ═══ */
+.pill-name { font-size:12px; font-weight:700; color:var(--dark); margin-bottom:3px; overflow-wrap:anywhere; }
+.pill-desc { font-size:10px; color:var(--gray); line-height:1.5; overflow-wrap:anywhere; }
+.pill-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:linear-gradient(160deg,#888 0%,#444 100%); color:rgba(255,255,255,0.55); font-size:10px; font-weight:600; text-align:center; padding:12px; }
 
-/* Grid: 7 equal columns, rows: [label-top] [pill] [label-bottom] */
-.pills-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  grid-template-rows: auto auto auto;
-  gap: 0 14px;
-  align-items: start;
+/* ═══ DOTS (compartido): máximo 5 visibles; la ventana se desplaza y los extremos se achican si hay más ═══ */
+.m-dots { overflow:hidden; margin:2px auto 0; }
+.m-dots-track { display:flex; transition:transform .35s cubic-bezier(.22,.8,.3,1); }
+.m-dot { flex:0 0 16px; height:16px; padding:0; border:0; background:none; display:flex; align-items:center; justify-content:center; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.m-dot::after { content:''; width:7px; height:7px; border-radius:50%; background:rgba(0,0,0,0.22); transition:transform .3s ease, background .3s ease, opacity .3s ease; }
+.m-dot:hover::after { background:rgba(0,0,0,0.4); }
+.m-dot.active::after { background:var(--dark); transform:scale(1.3); }
+.m-dot.edge::after   { transform:scale(.6); }
+.m-dot.out::after    { transform:scale(0); opacity:0; }
+
+/* ═══ DESKTOP: carrusel infinito de 5 burbujas (las 2 de las esquinas, difuminadas como peek) ═══ */
+.desktop-projects { padding:0 6% 40px; }
+.d-stage {
+  position:relative; width:100%;
+  --w:180px; --lh:92px;                         /* ancho de burbuja y alto de la zona de etiquetas (los calcula el JS) */
+  height:calc(var(--w) / 0.44 + var(--lh) * 2 + 44px);
+  overflow-x:hidden; overflow-x:clip;           /* solo se recorta en horizontal: la sombra no se corta */
+  touch-action:pan-y; overscroll-behavior-x:contain;
+  user-select:none; -webkit-user-select:none;
+  cursor:grab; outline:none;
 }
-
-/* Labels top row */
-.label-top {
-  padding: 0 6px 14px;
-  min-height: 60px;
+.d-stage.dragging { cursor:grabbing; }
+.d-stage.dragging .d-slide, .d-stage.no-anim .d-slide { transition:none; }
+.d-slide {
+  position:absolute; top:0; left:50%; width:var(--w); margin-left:calc(var(--w) / -2);
+  display:grid; grid-template-rows:var(--lh) auto var(--lh);
+  transition:transform .55s cubic-bezier(.22,.8,.3,1), opacity .55s ease, filter .55s ease;
+  will-change:transform, opacity, filter;
 }
-.label-empty { min-height: 60px; }
+.d-label { padding:0 6px; }
+.d-label.top    { align-self:end;   padding-bottom:14px; }   /* etiquetas arriba o abajo, alternadas */
+.d-label.bottom { align-self:start; padding-top:14px; }
 
-/* Pills middle row — all same height via a shared row */
 .pill-card {
-  display: block;
-  border-radius: 200px;
-  overflow: hidden;
-  cursor: pointer;
-  text-decoration: none;
-  background: #e0e0e0;
-  width: 100%;
-  aspect-ratio: 0.44;
-  position: relative;
-  border: 5px solid #ffffff;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10);
-  opacity: 0;
-  transform: translateY(28px);
-  transition: opacity .6s ease, transform .6s ease, box-shadow .3s ease;
+  display:block; border-radius:200px; overflow:hidden; cursor:pointer; text-decoration:none;
+  background:#e0e0e0; width:100%; aspect-ratio:0.44; position:relative;
+  border:5px solid #ffffff;
+  box-shadow:0 8px 28px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10);
+  transition:transform .35s ease, box-shadow .3s ease;
+  -webkit-user-drag:none;
 }
-.pill-card.visible { opacity:1; transform:translateY(0); }
-.pill-card.visible:hover { transform:translateY(-8px) scale(1.02); box-shadow:0 28px 52px rgba(0,0,0,0.22), 0 4px 12px rgba(0,0,0,0.12); }
-.pill-card:nth-child(1) { transition-delay:0s; }
-.pill-card:nth-child(2) { transition-delay:.07s; }
-.pill-card:nth-child(3) { transition-delay:.14s; }
-.pill-card:nth-child(4) { transition-delay:.21s; }
-.pill-card:nth-child(5) { transition-delay:.28s; }
-.pill-card:nth-child(6) { transition-delay:.35s; }
-.pill-card:nth-child(7) { transition-delay:.42s; }
-
-.pill-card img { width:100%; height:100%; object-fit:cover; display:block; }
-.pill-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:linear-gradient(160deg,#888 0%,#444 100%); color:rgba(255,255,255,0.5); font-size:10px; font-weight:600; text-align:center; padding:12px; }
-
+.pill-card:hover { transform:translateY(-8px) scale(1.02); box-shadow:0 28px 52px rgba(0,0,0,0.22), 0 4px 12px rgba(0,0,0,0.12); }
+.pill-card img { width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; -webkit-user-drag:none; }
 .pill-card::after {
   content:attr(data-name);
   position:absolute; inset:0;
@@ -78,29 +80,49 @@ body { font-family:'Montserrat',sans-serif; background:#fff; color:var(--dark); 
   color:#fff; opacity:0; transition:opacity .25s;
   padding:12px; text-align:center; border-radius:200px; text-transform:uppercase;
 }
-.pill-card.visible:hover::after { opacity:1; }
+.pill-card:hover::after { opacity:1; }
+.d-stage.dragging .pill-card:hover { transform:none; box-shadow:0 8px 28px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10); }
+.d-stage.dragging .pill-card::after { opacity:0; }
 
-/* Labels bottom row */
-.label-bottom {
-  padding: 14px 6px 0;
-  min-height: 60px;
-}
+/* Entrada escalonada al cargar */
+@keyframes pillIn { from { opacity:0; transform:translateY(28px); } }
+.d-stage.intro .pill-card { animation:pillIn .6s ease backwards; animation-delay:calc(var(--k, 0) * .08s); }
 
-.pill-name { font-size:12px; font-weight:700; color:var(--dark); margin-bottom:3px; }
-.pill-desc { font-size:10px; color:var(--gray); line-height:1.5; }
+.d-dots { margin-top:6px; }
 
-/* ═══ MOBILE SLIDER ═══ */
+/* ═══ MOBILE CAROUSEL (infinito, con peek) ═══ */
 .mobile-projects { display:none; padding:0 0 60px; }
-.mobile-slider-wrap { overflow:hidden; }
-.mobile-slides { display:flex; transition:transform .4s cubic-bezier(.4,0,.2,1); will-change:transform; }
-.mobile-slide { min-width:100%; padding:0 32px; display:flex; flex-direction:column; align-items:center; }
-.mobile-label { text-align:center; margin-bottom:16px; }
-.mobile-label .pill-name { font-size:14px; margin-bottom:4px; }
-.mobile-label .pill-desc { font-size:11px; }
-.mobile-pill { width:180px; aspect-ratio:0.44; border-radius:200px; overflow:hidden; display:block; text-decoration:none; background:#e0e0e0; border:5px solid #ffffff; box-shadow:0 8px 28px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10); }
-.mobile-pill img { width:100%; height:100%; object-fit:cover; display:block; }
-.mobile-counter { text-align:center; margin-top:20px; font-size:12px; font-weight:600; letter-spacing:0.15em; color:rgba(0,0,0,0.4); }
-.mobile-counter .cur { color:var(--dark); font-weight:700; }
+
+/* El stage tiene alto fijo con espacio de sobra arriba/abajo: así la sombra de la burbuja no se corta.
+   Solo se recorta en horizontal (los vecinos que salen de pantalla). */
+.mobile-stage {
+  position:relative; height:570px;
+  overflow-x:hidden; overflow-x:clip;
+  touch-action:pan-y;               /* scroll vertical normal, el horizontal lo maneja el carrusel */
+  user-select:none; -webkit-user-select:none;
+  cursor:grab; outline:none;
+}
+.mobile-stage.dragging { cursor:grabbing; }
+.mobile-stage.dragging .m-slide { transition:none; }
+
+.m-slide {
+  position:absolute; top:10px; left:50%; width:280px; margin-left:-140px;
+  display:flex; flex-direction:column; align-items:center;
+  transition: transform .5s cubic-bezier(.22,.8,.3,1), opacity .5s ease, filter .5s ease;
+  will-change: transform, opacity, filter;
+}
+.m-label { width:100%; height:72px; padding:0 10px; margin-bottom:16px; text-align:center; transition:opacity .3s ease; }
+.m-label .pill-name { font-size:14px; margin-bottom:4px; }
+.m-label .pill-desc { font-size:11px; }
+
+.mobile-pill {
+  width:180px; aspect-ratio:0.44; border-radius:200px; overflow:hidden; display:block;
+  text-decoration:none; background:#e0e0e0; border:5px solid #ffffff;
+  box-shadow:0 8px 28px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10);
+  -webkit-user-drag:none;
+}
+.mobile-pill img { width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; -webkit-user-drag:none; }
+#mDots { width:80px; }
 
 @media (max-width:700px) {
   .desktop-projects { display:none; }
@@ -142,140 +164,329 @@ body { font-family:'Montserrat',sans-serif; background:#fff; color:var(--dark); 
   </div>
 </nav>
 
-<!-- ═══ DESKTOP ═══ -->
+<!-- ═══ DESKTOP: carrusel infinito (se genera desde projects.js) ═══ -->
 <div class="desktop-projects">
-  <div class="pills-grid">
-
-    <!-- ROW 1: top labels (odd cols have label, even cols empty) -->
-    <div class="label-top"><p class="pill-name">MUDS</p><p class="pill-desc">Calzado modular y ecológico. Proyecto de título universitario.</p></div>
-    <div class="label-empty"></div>
-    <div class="label-top"><p class="pill-name">Lontra Platform</p><p class="pill-desc">Concurso diseño para especies.</p></div>
-    <div class="label-empty"></div>
-    <div class="label-top"><p class="pill-name">Espacio Copihue</p><p class="pill-desc">Modelado y programación paramétrica.</p></div>
-    <div class="label-empty"></div>
-    <div class="label-top"><p class="pill-name">Refugio Prisma</p><p class="pill-desc">Diseño de espacios arquitectónicos.</p></div>
-
-    <!-- ROW 2: all 7 pills at same height -->
-    <a href="proyecto.html?p=muds" class="pill-card" data-name="MUDS">
-      <img src="portadas-img/MUDS_cover.png" alt="MUDS" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-      <div class="pill-placeholder" style="display:none">MUDS</div>
-    </a>
-    <a href="proyecto.html?p=neast" class="pill-card" data-name="by Neast">
-      <img src="portadas-img/Neast_cover.png" alt="Neast" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-      <div class="pill-placeholder" style="display:none">Neast</div>
-    </a>
-    <a href="proyecto.html?p=lontra" class="pill-card" data-name="Lontra Platform">
-      <img src="portadas-img/Lontra_cover.png" alt="Lontra" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-      <div class="pill-placeholder" style="display:none">Lontra</div>
-    </a>
-    <a href="proyecto.html?p=konatec" class="pill-card" data-name="Konatec">
-      <img src="portadas-img/Konatec_cover.png" alt="Konatec" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-      <div class="pill-placeholder" style="display:none">Konatec</div>
-    </a>
-    <a href="proyecto.html?p=copihue" class="pill-card" data-name="Espacio Copihue">
-      <img src="portadas-img/Copihue_cover.png" alt="Copihue" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-      <div class="pill-placeholder" style="display:none">Copihue</div>
-    </a>
-    <a href="proyecto.html?p=cambridge" class="pill-card" data-name="Cambridge & José Cruz">
-      <img src="portadas-img/Cambridge_cover.png" alt="Cambridge" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-      <div class="pill-placeholder" style="display:none">Cambridge</div>
-    </a>
-    <a href="proyecto.html?p=refugio" class="pill-card" data-name="Refugio Prisma">
-      <img src="portadas-img/Refugio_cover.png" alt="Refugio" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-      <div class="pill-placeholder" style="display:none">Refugio Prisma</div>
-    </a>
-
-    <!-- ROW 3: bottom labels (even cols have label, odd cols empty) -->
-    <div class="label-empty"></div>
-    <div class="label-bottom"><p class="pill-name">by Neast</p><p class="pill-desc">Empresa dedicada al diseño y desarrollo de componentes MTB.</p></div>
-    <div class="label-empty"></div>
-    <div class="label-bottom"><p class="pill-name">Konatec</p><p class="pill-desc">Rediseño de máquinas de ingeniería.</p></div>
-    <div class="label-empty"></div>
-    <div class="label-bottom"><p class="pill-name">Cambridge & José Cruz</p><p class="pill-desc">Diseño y fabricación de espacio para exhibición internacional.</p></div>
-    <div class="label-empty"></div>
-
-  </div>
+  <div class="d-stage intro" id="dStage" tabindex="0" role="region" aria-roledescription="carrusel" aria-label="Proyectos"></div>
+  <div class="m-dots d-dots" id="dDots"></div>
 </div>
 
-<!-- ═══ MOBILE SLIDER ═══ -->
+<!-- ═══ MOBILE: carrusel infinito (se genera desde projects.js) ═══ -->
 <div class="mobile-projects">
-  <div class="mobile-slider-wrap">
-    <div class="mobile-slides" id="mobileSlides">
-      <div class="mobile-slide">
-        <div class="mobile-label"><p class="pill-name">MUDS</p><p class="pill-desc">Calzado modular y ecológico. Proyecto de título universitario.</p></div>
-        <a href="proyecto.html?p=muds" class="mobile-pill"><img src="portadas-img/MUDS_cover.png" alt="MUDS" onerror="this.src='proyectos-img/MUDS_1.jpg'"></a>
-      </div>
-      <div class="mobile-slide">
-        <div class="mobile-label"><p class="pill-name">by Neast</p><p class="pill-desc">Empresa dedicada al diseño y desarrollo de componentes MTB.</p></div>
-        <a href="proyecto.html?p=neast" class="mobile-pill"><img src="portadas-img/Neast_cover.png" alt="Neast" onerror="this.src='proyectos-img/Neast_1.jpg'"></a>
-      </div>
-      <div class="mobile-slide">
-        <div class="mobile-label"><p class="pill-name">Lontra Platform</p><p class="pill-desc">Concurso diseño para especies.</p></div>
-        <a href="proyecto.html?p=lontra" class="mobile-pill"><img src="portadas-img/Lontra_cover.png" alt="Lontra" onerror="this.src='proyectos-img/Lontra_Platform_01.jpg'"></a>
-      </div>
-      <div class="mobile-slide">
-        <div class="mobile-label"><p class="pill-name">Konatec</p><p class="pill-desc">Rediseño de máquinas de ingeniería.</p></div>
-        <a href="proyecto.html?p=konatec" class="mobile-pill"><img src="portadas-img/Konatec_cover.png" alt="Konatec" onerror="this.src='proyectos-img/Konatec_01.jpg'"></a>
-      </div>
-      <div class="mobile-slide">
-        <div class="mobile-label"><p class="pill-name">Espacio Copihue</p><p class="pill-desc">Modelado y programación paramétrica.</p></div>
-        <a href="proyecto.html?p=copihue" class="mobile-pill"><img src="portadas-img/Copihue_cover.png" alt="Copihue" onerror="this.src='proyectos-img/Espacio_Copihue_01.jpg'"></a>
-      </div>
-      <div class="mobile-slide">
-        <div class="mobile-label"><p class="pill-name">Cambridge & José Cruz</p><p class="pill-desc">Diseño y fabricación para exhibición internacional.</p></div>
-        <a href="proyecto.html?p=cambridge" class="mobile-pill"><img src="portadas-img/Cambridge_cover.png" alt="Cambridge" onerror="this.src='proyectos-img/Cambridge_01.jpg'"></a>
-      </div>
-      <div class="mobile-slide">
-        <div class="mobile-label"><p class="pill-name">Refugio Prisma</p><p class="pill-desc">Diseño de espacios arquitectónicos.</p></div>
-        <a href="proyecto.html?p=refugio" class="mobile-pill"><img src="portadas-img/Refugio_cover.png" alt="Refugio" onerror="this.src='proyectos-img/Refugio_Prisma_01.jpg'"></a>
-      </div>
-    </div>
-  </div>
-  <div class="mobile-counter"><span class="cur" id="mCur">1</span> / 7</div>
+  <div class="mobile-stage" id="mStage" tabindex="0" role="region" aria-roledescription="carrusel" aria-label="Proyectos"></div>
+  <div class="m-dots" id="mDots"></div>
 </div>
 
+<script src="projects.js"></script>
 <script>
-  /* Desktop pill reveal */
-  const pills = document.querySelectorAll('.pill-card');
-  const obs = new IntersectionObserver(e => e.forEach(x => { if(x.isIntersecting) x.target.classList.add('visible'); }), {threshold:0.05});
-  pills.forEach(p => obs.observe(p));
+/* ═══════════════════════ Utilidades compartidas ═══════════════════════ */
 
-  /* Mobile slider — fixed with proper touch handling */
-  const slidesEl = document.getElementById('mobileSlides');
-  const curEl    = document.getElementById('mCur');
-  const TOTAL    = 7;
-  let idx = 0, startX = 0, dragging = false, moved = false;
+/* Burbuja (link a la imagen de portada). Si la portada falta usa la 1ª imagen del proyecto; si tampoco, un recuadro con el nombre. */
+function buildPill(p, className, withOverlay) {
+  const a = document.createElement('a');
+  a.href = 'proyecto.html?p=' + encodeURIComponent(p.key);
+  a.className = className;
+  a.draggable = false;
+  if (withOverlay) a.setAttribute('data-name', p.title);
+  const img = document.createElement('img');
+  img.alt = p.title; img.draggable = false;
+  let tried = 0;
+  img.onerror = () => {
+    if (tried++ === 0 && p.slides && p.slides[0]) { img.src = p.slides[0]; return; }
+    const ph = document.createElement('div');
+    ph.className = 'pill-placeholder'; ph.textContent = p.title;
+    img.replaceWith(ph);
+  };
+  img.src = p.cover;
+  a.appendChild(img);
+  return a;
+}
+function buildLabel(p, cls) {
+  const d = document.createElement('div');
+  d.className = cls;
+  const n = document.createElement('p'); n.className = 'pill-name'; n.textContent = p.title;
+  const t = document.createElement('p'); t.className = 'pill-desc'; t.textContent = p.desc || '';
+  d.append(n, t);
+  return d;
+}
 
-  function goTo(i) {
-    idx = Math.max(0, Math.min(TOTAL - 1, i));
-    slidesEl.style.transform = `translateX(-${idx * 100}%)`;
-    curEl.textContent = idx + 1;
+/* Dots: máx. 5 visibles, la ventana se desplaza; devuelve la función que marca el activo */
+function createDots(dotsEl, N, onPick) {
+  const MAXDOTS = 5, vis = Math.min(N, MAXDOTS);
+  const track = document.createElement('div');
+  track.className = 'm-dots-track';
+  dotsEl.appendChild(track);
+  dotsEl.style.width = (vis * 16) + 'px';
+  const dots = Array.from({length: N}, (_, i) => {
+    const d = document.createElement('button');
+    d.className = 'm-dot';
+    d.setAttribute('aria-label', 'Ir al proyecto ' + (i + 1));
+    d.addEventListener('click', () => onPick(i));
+    track.appendChild(d);
+    return d;
+  });
+  return function update(active) {
+    const ws = Math.max(0, Math.min(N - vis, active - Math.floor(vis / 2)));
+    track.style.transform = 'translateX(' + (-ws * 16) + 'px)';
+    dots.forEach((d, i) => {
+      const inWin = i >= ws && i < ws + vis;
+      d.classList.toggle('active', i === active);
+      d.classList.toggle('out', !inWin);
+      /* extremo de la ventana con más proyectos más allá => punto chico */
+      d.classList.toggle('edge', inWin && i !== active &&
+        ((i === ws && ws > 0) || (i === ws + vis - 1 && ws + vis < N)));
+    });
+  };
+}
+
+/* ═══════════════════════ DESKTOP: carrusel infinito de 5 ═══════════════════════ */
+(() => {
+  const stage = document.getElementById('dStage');
+  const N = PROJECTS.length;
+
+  /* Para que las etiquetas alternen arriba/abajo también en la "costura" del loop, la cantidad de
+     burbujas del anillo debe ser par y ≥ 6. Si no lo es, se repite la lista (los dots siguen siendo N). */
+  let reps = Math.max(1, Math.ceil(6 / N));
+  if ((N * reps) % 2) reps++;
+  const L = N * reps;
+
+  const slides = Array.from({length: L}, (_, i) => {
+    const p = PROJECTS[i % N];
+    const side = i % 2 === 0 ? 'top' : 'bottom';
+    const el = document.createElement('div');
+    el.className = 'd-slide';
+    const top = document.createElement('div');    top.className = 'd-label top';
+    const bottom = document.createElement('div'); bottom.className = 'd-label bottom';
+    const lab = buildLabel(p, 'd-label-inner');
+    (side === 'top' ? top : bottom).append(...lab.childNodes);
+    el.append(top, buildPill(p, 'pill-card', true), bottom);
+    stage.appendChild(el);
+    return el;
+  });
+
+  let idx = 0, STEP = 220, dragging = false, moved = false, startX = 0, startT = 0;
+  const prevOff = slides.map(() => null);
+  const updateDots = createDots(document.getElementById('dDots'), N, pickItem);
+
+  function circ(i) {                       /* distancia circular de cada burbuja a la activa */
+    let o = ((i - idx) % L + L) % L;
+    if (o > L / 2) o -= L;
+    return o;
   }
 
-  slidesEl.addEventListener('touchstart', e => {
-    startX  = e.touches[0].clientX;
-    dragging = true;
-    moved    = false;
-  }, {passive:true});
+  function render(frac) {
+    slides.forEach((el, i) => {
+      const off = circ(i);
+      const wrapped = prevOff[i] !== null && Math.abs(off - prevOff[i]) > L / 2;   /* da la vuelta: se reubica sin animar (invisible) */
+      prevOff[i] = off;
+      if (wrapped) el.style.transition = 'none';
+      const pos = off + frac, a = Math.abs(pos);
+      /* centro y vecinos inmediatos: nítidos. Esquinas (a≈2): difuminadas y atenuadas. Más allá: invisibles. */
+      let opacity, blur, scale;
+      if (a <= 1)      { opacity = 1;                       blur = 0;             scale = 1; }
+      else if (a <= 2) { opacity = 1 - 0.55 * (a - 1);      blur = 3 * (a - 1);   scale = 1 - 0.05 * (a - 1); }
+      else             { opacity = Math.max(0, 0.45 * (3 - a)); blur = 3;         scale = 0.95; }
+      el.style.transform     = 'translate3d(' + (pos * STEP).toFixed(1) + 'px,0,0) scale(' + scale.toFixed(3) + ')';
+      el.style.opacity       = opacity.toFixed(3);
+      el.style.filter        = blur > 0.05 ? 'blur(' + blur.toFixed(2) + 'px)' : 'none';
+      el.style.zIndex        = String(100 - Math.round(a * 10));
+      el.style.pointerEvents = a < 2.4 ? 'auto' : 'none';
+      if (wrapped) { void el.offsetWidth; requestAnimationFrame(() => { el.style.transition = ''; }); }
+    });
+  }
 
-  slidesEl.addEventListener('touchmove', e => {
-    if (!dragging) return;
-    if (Math.abs(e.touches[0].clientX - startX) > 8) moved = true;
-  }, {passive:true});
+  function go(i) {
+    idx = ((i % L) + L) % L;
+    render(0);
+    updateDots(idx % N);
+  }
+  function pickItem(n) {                   /* desde un dot: ir por el camino más corto */
+    let diff = ((n - (idx % N)) % N + N) % N;
+    if (diff > N / 2) diff -= N;
+    go(idx + diff);
+  }
 
-  slidesEl.addEventListener('touchend', e => {
-    if (!dragging) return;
+  /* Tamaño: la burbuja se adapta al ancho (caben 5 + márgenes) y al alto de la ventana */
+  function layout() {
+    const cw = stage.clientWidth;
+    if (!cw) return;                       /* oculto (versión celular) */
+    let W = Math.min(cw / 5.8, Math.max(150, (window.innerHeight - 380) * 0.44));
+    W = Math.max(96, Math.min(250, W));
+    /* Separación entre burbujas: mínimo 1.18×ancho; si sobra espacio (pantallas anchas pero bajas) se reparten hasta 1.55× */
+    STEP = Math.max(W * 1.18, Math.min(W * 1.55, (cw - W) / 4.2));
+    const LH = Math.min(140, Math.max(84, Math.round(14000 / W)));
+    stage.style.setProperty('--w', W.toFixed(1) + 'px');
+    stage.style.setProperty('--lh', LH + 'px');
+    stage.classList.add('no-anim');
+    render(0);
+    requestAnimationFrame(() => requestAnimationFrame(() => stage.classList.remove('no-anim')));
+  }
+  window.addEventListener('resize', layout);
+
+  /* Arrastre con mouse o dedo */
+  stage.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    dragging = true; moved = false;
+    startX = e.clientX; startT = performance.now();
+    window.addEventListener('pointermove',   onMove);
+    window.addEventListener('pointerup',     onUp);
+    window.addEventListener('pointercancel', onCancel);
+  });
+  function onMove(e) {
+    const dx = e.clientX - startX;
+    if (!moved && Math.abs(dx) > 6) { moved = true; stage.classList.add('dragging'); }
+    if (moved) render(Math.max(-1, Math.min(1, dx / STEP)));
+  }
+  function endDrag() {
     dragging = false;
-    const dx = e.changedTouches[0].clientX - startX;
-    if (Math.abs(dx) < 40) return;
-    if (dx < 0) goTo(idx + 1);
-    else        goTo(idx - 1);
+    stage.classList.remove('dragging');
+    window.removeEventListener('pointermove',   onMove);
+    window.removeEventListener('pointerup',     onUp);
+    window.removeEventListener('pointercancel', onCancel);
+    setTimeout(() => { moved = false; }, 0);          /* después del click que dispara el navegador */
+  }
+  function onUp(e) {
+    const dx = e.clientX - startX;
+    const v  = Math.abs(dx) / Math.max(1, performance.now() - startT);
+    const swiped = moved && (Math.abs(dx) > STEP * 0.22 || v > 0.35);
+    endDrag();
+    if (swiped) go(dx < 0 ? idx + 1 : idx - 1); else render(0);
+  }
+  function onCancel() { endDrag(); render(0); }
+
+  /* Click: las 3 centrales abren el proyecto; las de las esquinas (peek) se centran */
+  slides.forEach((el, i) => el.addEventListener('click', e => {
+    if (moved) { e.preventDefault(); return; }
+    const off = circ(i);
+    if (Math.abs(off) >= 2) { e.preventDefault(); go(idx + off); }
+  }));
+
+  /* Teclado y trackpad (deslizar con dos dedos en horizontal) */
+  stage.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') go(idx + 1);
+    if (e.key === 'ArrowLeft')  go(idx - 1);
+  });
+  let wheelAcc = 0, wheelLock = false, wheelTimer = null;
+  stage.addEventListener('wheel', e => {
+    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;   /* scroll vertical: normal */
+    e.preventDefault();
+    if (!wheelLock) {
+      wheelAcc += e.deltaX;
+      if (Math.abs(wheelAcc) > 50) { go(idx + (wheelAcc > 0 ? 1 : -1)); wheelAcc = 0; wheelLock = true; }
+    }
+    clearTimeout(wheelTimer);                               /* un gesto = un paso (aunque haya inercia) */
+    wheelTimer = setTimeout(() => { wheelLock = false; wheelAcc = 0; }, 140);
+  }, {passive:false});
+
+  /* Entrada escalonada: solo las 5 visibles */
+  slides.forEach((el, i) => {
+    const off = circ(i);
+    el.querySelector('.pill-card').style.setProperty('--k', String(Math.abs(off) <= 2 ? off + 2 : 0));
+  });
+  setTimeout(() => stage.classList.remove('intro'), 1400);
+
+  layout();
+  go(0);
+})();
+
+/* ═══════════════════════ MOBILE: infinito, peek, swipe + dots ═══════════════════════ */
+(() => {
+  const stage  = document.getElementById('mStage');
+  const N      = PROJECTS.length;
+  const STEP   = 165;            /* distancia entre centros de burbujas (px) */
+
+  const slides = PROJECTS.map(p => {
+    const el = document.createElement('div');
+    el.className = 'm-slide';
+    el.append(buildLabel(p, 'm-label'), buildPill(p, 'mobile-pill', false));
+    stage.appendChild(el);
+    return el;
+  });
+  const labels = slides.map(el => el.querySelector('.m-label'));
+  let idx = 0, dragging = false, moved = false, startX = 0, startT = 0;
+  const updateDots = createDots(document.getElementById('mDots'), N, i => go(i));
+
+  /* Distancia circular de cada slide al activo => carrusel infinito */
+  function circ(i) {
+    let o = ((i - idx) % N + N) % N;
+    if (o > N / 2) o -= N;
+    return o;
+  }
+
+  const prevOff = slides.map(() => null);
+  function render(frac) {
+    slides.forEach((el, i) => {
+      /* Posición real (sin recortar): cada burbuja tiene su propio lugar, así no se encima ninguna al arrastrar */
+      const off = circ(i);
+      /* Si la burbuja "da la vuelta" al otro extremo, se reubica sin animar (está invisible) */
+      const wrapped = prevOff[i] !== null && Math.abs(off - prevOff[i]) > N / 2;
+      prevOff[i] = off;
+      if (wrapped) el.style.transition = 'none';
+      const pos = off + frac;
+      const a   = Math.abs(pos);
+      const scale   = 1 - 0.16 * Math.min(a, 1.5);
+      const opacity = a <= 1 ? 1 - 0.5 * a : Math.max(0, 0.5 - 0.5 * (a - 1));
+      const blur    = Math.min(a, 1.2) * 3;
+      el.style.transform     = 'translate3d(' + (pos * STEP).toFixed(1) + 'px,0,0) scale(' + scale.toFixed(3) + ')';
+      el.style.opacity       = opacity.toFixed(3);
+      el.style.filter        = blur > 0.05 ? 'blur(' + blur.toFixed(2) + 'px)' : 'none';
+      el.style.zIndex        = String(100 - Math.round(a * 10));
+      el.style.pointerEvents = a < 1.6 ? 'auto' : 'none';
+      labels[i].style.opacity = Math.max(0, 1 - a * 2).toFixed(3);
+      if (wrapped) { void el.offsetWidth; requestAnimationFrame(() => { el.style.transition = ''; }); }
+    });
+  }
+
+  function go(i) {
+    idx = ((i % N) + N) % N;
+    render(0);
+    updateDots(idx);
+  }
+
+  /* Arrastre con el dedo (o mouse) */
+  stage.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    dragging = true; moved = false;
+    startX = e.clientX; startT = performance.now();
+    window.addEventListener('pointermove',  onMove);
+    window.addEventListener('pointerup',    onUp);
+    window.addEventListener('pointercancel', onCancel);
+  });
+  function onMove(e) {
+    const dx = e.clientX - startX;
+    if (!moved && Math.abs(dx) > 6) { moved = true; stage.classList.add('dragging'); }
+    if (moved) render(Math.max(-1, Math.min(1, dx / STEP)));
+  }
+  function endDrag() {
+    dragging = false;
+    stage.classList.remove('dragging');
+    window.removeEventListener('pointermove',  onMove);
+    window.removeEventListener('pointerup',    onUp);
+    window.removeEventListener('pointercancel', onCancel);
+    setTimeout(() => { moved = false; }, 0); /* después del click que dispara el navegador */
+  }
+  function onUp(e) {
+    const dx = e.clientX - startX;
+    const v  = Math.abs(dx) / Math.max(1, performance.now() - startT);
+    const swiped = moved && (Math.abs(dx) > 45 || v > 0.4);
+    endDrag();
+    if (swiped) go(dx < 0 ? idx + 1 : idx - 1);
+    else render(0);
+  }
+  function onCancel() { endDrag(); render(0); }   /* p.ej. el navegador tomó el gesto para scroll vertical */
+
+  /* Tocar un vecino lo centra; tocar el central abre el proyecto */
+  slides.forEach((el, i) => el.addEventListener('click', e => {
+    if (moved) { e.preventDefault(); return; }
+    if (circ(i) !== 0) { e.preventDefault(); go(i); }
+  }));
+
+  stage.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') go(idx + 1);
+    if (e.key === 'ArrowLeft')  go(idx - 1);
   });
 
-  /* Block link click when swiping */
-  slidesEl.querySelectorAll('a').forEach(a => {
-    a.addEventListener('click', e => { if (moved) e.preventDefault(); });
-  });
+  go(0);
+})();
 </script>
 
 <footer id="site-footer">

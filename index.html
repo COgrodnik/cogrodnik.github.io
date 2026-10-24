@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cristóbal Ogrodnik — Design Engineer</title>
+<meta name="description" content="Portfolio web de Cristóbal Ogrodnik, ingeniero en diseño con Magíster en Innovación y Diseño. Proyectos de diseño de producto, fabricación digital y emprendimiento.">
+<meta name="theme-color" content="#111111">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231a1a1a'/%3E%3Ctext x='32' y='43' font-family='Arial,Helvetica,sans-serif' font-size='28' font-weight='800' text-anchor='middle' fill='white'%3ECO%3C/text%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_CL">
+<meta property="og:site_name" content="Cristóbal Ogrodnik">
+<meta property="og:title" content="Cristóbal Ogrodnik — Design Engineer">
+<meta property="og:description" content="Portfolio web: proyectos de diseño de producto, fabricación digital y emprendimiento.">
+<meta property="og:url" content="https://cogrodnik.github.io/">
+<meta property="og:image" content="https://cogrodnik.github.io/foto.jpg">
+<meta name="twitter:card" content="summary">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,300;1,400;1,700;1,800&family=Shadows+Into+Light&display=swap" rel="stylesheet">
@@ -24,28 +35,26 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   inset: 0;
   background: #ffffff;
   z-index: 1;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;          /* si el contenido no cabe (pantallas bajas), se puede desplazar */
+  scrollbar-width: thin;
 }
 
 
 
-.mini-chevron { position: absolute; top: 20px; right: 52px; z-index: 3; cursor: pointer; }
-.mini-chevron svg { width: 17px; height: 17px; }
 
 /* Flex layout: text left | photo right, centred vertically */
 .about-inner {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  min-height: 100%;          /* centrado vertical cuando cabe; si no, crece y #about hace scroll */
+  width: 100%;
+  max-width: 1300px;
+  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 60px 52px 40px;
+  padding: 76px 52px 40px;   /* 76px arriba: despeja la barra con el nombre */
   gap: 40px;
-  max-width: 1300px;
-  margin: 0 auto;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
 }
 
 .about-text {
@@ -63,16 +72,16 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   line-height: 1; margin-bottom: 20px;
 }
 .about-name-h { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
-.about-degree { font-size: 11px; color: #888; line-height: 1.6; margin-bottom: 12px; }
+.about-degree { font-size: clamp(11px, 1.45vh, 13px); color: #888; line-height: 1.6; margin-bottom: 12px; }
 
-.about-p { font-size: 11px; color: #555; line-height: 1.75; margin-bottom: 8px; }
+.about-p { font-size: clamp(11px, 1.45vh, 13px); color: #555; line-height: 1.75; margin-bottom: 8px; }
 
 .cta-row { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
   padding: 12px 36px; font-family: 'Montserrat', sans-serif;
   font-size: 12px; font-weight: 600; letter-spacing: 0.05em;
-  border-radius: 4px; text-decoration: none; border: none; cursor: pointer;
+  border-radius: 999px; text-decoration: none; border: none; cursor: pointer;
   transition: transform .15s ease, opacity .15s ease;
 }
 .btn:hover { transform: translateY(-2px); opacity: .88; }
@@ -83,46 +92,8 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   flex-shrink: 0; display: flex; align-items: center;
   position: relative;
 }
-.photo-col a {
-  display: block;
-  border-radius: 50%;
-  position: relative;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.photo-col a:hover {
-  transform: scale(1.04);
-}
-.photo-col a:hover .photo-circle {
-  box-shadow: 0 24px 60px rgba(0,0,0,0.35), 0 6px 20px rgba(0,0,0,0.20);
-}
-.photo-tooltip {
-  position: absolute;
-  bottom: -36px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #1a1a1a;
-  color: #fff;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  padding: 5px 14px;
-  border-radius: 20px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease, bottom 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.photo-tooltip svg { width: 10px; height: 10px; flex-shrink: 0; }
-.photo-col a:hover .photo-tooltip {
-  opacity: 1;
-  bottom: -40px;
-}
 .photo-circle {
-  width: 420px; height: 420px;
+  width: min(420px, 58vh); height: min(420px, 58vh);
   border-radius: 50%; overflow: hidden;
   border: 6px solid #ffffff;
   box-shadow: 0 16px 48px rgba(0,0,0,0.28), 0 4px 16px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.10);
@@ -194,28 +165,28 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
 
 /* ═══ RESPONSIVE ═══ */
 @media (max-width: 900px) {
-  .about-inner { padding: 0 28px; gap: 28px; }
-  .photo-circle { width: 240px; height: 240px; }
-  .cream-top { left: 28px; }
-  .mini-chevron { right: 28px; }
+  .about-inner { padding: 76px 28px 32px; gap: 28px; }
+  .photo-circle { width: min(240px, 40vh); height: min(240px, 40vh); }
   .hero-logo { left: 28px; }
   .hero-bottom { left: 28px; right: 28px; }
   #name-bar { padding: 18px 28px; }
 }
 @media (max-width: 600px) {
-  .about-inner { flex-direction: column; justify-content: flex-start; align-items: center; padding: 80px 24px 40px; gap: 20px; overflow-y: auto; transform: none; left: 0; }
+  .about-inner { flex-direction: column; justify-content: flex-start; align-items: center; padding: 84px 24px 56px; gap: 20px; }
   .photo-col { order: -1; }
-  .photo-circle { width: 160px !important; height: 160px !important; }
+  .photo-circle { width: 160px; height: 160px; }
   .about-text { max-width: 100%; }
   .hola-title { font-size: 38px; margin-bottom: 14px; }
-  .about-name-h { font-size: 13px; }
-  .about-degree, .about-p { font-size: 10px; }
-  .btn { padding: 10px 24px; font-size: 11px; }
+  .about-name-h { font-size: 14px; }
+  .about-degree, .about-p { font-size: 12px; }
+  .btn { padding: 11px 26px; font-size: 12px; }
   .hero-name { font-size: 9px; letter-spacing: 0.15em; max-width: 30vw; word-break: break-word; }
   .hero-logo { left: 20px; top: 24px; font-size: 11px; }
   .hero-bottom { left: 20px; right: 20px; bottom: 28px; }
   .hero-year { font-size: 9px; }
   #name-bar { padding: 14px 20px; }
+  /* El botón "inicio" flota sobre el texto que se desplaza: fondo con degradado para que no se encime */
+  #arrow-up { bottom: 0; padding: 26px 56px 14px; background: linear-gradient(to top, #fff 55%, rgba(255,255,255,0)); }
 }
 
 /* ─── FOOTER ─── */
@@ -264,23 +235,29 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
     letter-spacing: 0.1em;
   }
 }
+
+/* Pantallas bajas (laptops con la ventana del navegador chica): espacios más compactos para que todo quepa sin scroll */
+@media (max-height: 720px) and (min-width: 601px) {
+  .about-inner { padding-top: 64px; padding-bottom: 24px; }
+  .hola-title { font-size: clamp(40px, 4.6vw, 52px); margin-bottom: 12px; }
+  .about-p { margin-bottom: 6px; line-height: 1.65; }
+  .cta-row { margin-top: 16px; }
+  #site-footer { margin-top: 18px; padding-top: 14px; padding-bottom: 16px; }
+}
 </style>
 </head>
 <body>
 <div id="spacer"></div>
 
 <section id="about">
-  <div class="mini-chevron" onclick="window.scrollTo({top:0,behavior:'smooth'})">
-    <svg viewBox="0 0 18 18" fill="none"><path d="M3 6L9 12L15 6" stroke="#c8c8c8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  </div>
   <div class="about-inner">
     <div class="about-text">
       <h2 class="hola-title">¡HOLA!</h2>
       <h3 class="about-name-h">Mi nombre es Cristóbal Ogrodnik Bert</h3>
-      <p class="about-degree">Ingeniero en diseño con Master en Innovación y Diseño de la Universidad Adolfo Ibañez, Santiago, Chile.</p>
+      <p class="about-degree">Ingeniero en diseño con Magíster en Innovación y Diseño de la Universidad Adolfo Ibáñez, Santiago, Chile.</p>
       <p class="about-p">Soy amante de la creación de productos únicos, con impacto e identidad. Me apasiona ver cómo las cosas pasan del mundo de las ideas al físico, con todos los desafíos, aprendizajes y procesos que conlleva lograrlo.</p>
-      <p class="about-p">Por otro lado, tengo alma emprendedora, siendo parte de distintos proyectos. Uno de los más destacados es Neast Components, empresa de componentes de seguridad para ciclistas de montaña, en la que diseñamos productos únicos pensados en los ciclistas chilenos. Recientemente, comencé a desarrollar una marca de juguetes especializados para perros, llamada Yuki Pet.</p>
-      <p class="about-p">Me interesan mucho las herramientas de fabricación digital: Fabricación aditiva en todos sus formatos (SLA, SLS, FDM, etc), robótica y fabricación sustractiva (láser, CNC, etc). Tengo experiencia trabajando en el FabLab de la Diseño de la Universidad Adolfo Ibáñez.</p>
+      <p class="about-p">Por otro lado, tengo alma emprendedora, siendo parte de distintos proyectos. Uno de los más destacados es Neast Components™, empresa de componentes de seguridad para ciclistas de montaña, en la que diseñamos productos únicos pensados en los ciclistas chilenos. Recientemente, comencé a desarrollar una marca de juguetes especializados para perros, llamada Yuki Pet.</p>
+      <p class="about-p">Me interesan mucho las herramientas de fabricación digital: Fabricación aditiva en todos sus formatos (SLA, SLS, FDM, etc), robótica y fabricación sustractiva (láser, CNC, etc). Tengo experiencia trabajando en el FabLab de Diseño de la Universidad Adolfo Ibáñez.</p>
       <p class="about-p">Paralelamente, también llevo un par de años desarrollándome en la fotografía y filmmaking.</p>
       <div class="cta-row">
         <a href="proyectos.html" class="btn btn-dark">Proyectos</a>

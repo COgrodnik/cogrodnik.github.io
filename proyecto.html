@@ -2,8 +2,11 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Proyecto — Cristóbal Ogrodnik</title>
+<meta name="description" content="Visor de proyectos del portfolio de Cristóbal Ogrodnik.">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231a1a1a'/%3E%3Ctext x='32' y='43' font-family='Arial,Helvetica,sans-serif' font-size='28' font-weight='800' text-anchor='middle' fill='white'%3ECO%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,600;0,700;0,800;1,300;1,800&display=swap" rel="stylesheet">
@@ -23,6 +26,12 @@ html, body { width:100%; height:100%; overflow:hidden; font-family:'Montserrat',
 }
 .slide.active { opacity:1; z-index:1; }
 .slide img { width:100%; height:100%; object-fit:contain; display:block; }
+.slide-err {
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+  width:100%; height:100%; text-align:center; padding:24px;
+  font-size:12px; font-weight:300; letter-spacing:0.12em; text-transform:uppercase;
+  color:rgba(255,255,255,0.5);
+}
 
 /* ─── LOADING OVERLAY ─── */
 #loading {
@@ -84,7 +93,7 @@ html, body { width:100%; height:100%; overflow:hidden; font-family:'Montserrat',
   display:inline-flex; align-items:center; gap:7px;
   background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25);
   color:#fff; font-family:'Montserrat',sans-serif; font-size:11px; font-weight:600;
-  letter-spacing:0.07em; padding:8px 16px; border-radius:4px;
+  letter-spacing:0.07em; padding:8px 16px; border-radius:999px;
   cursor:pointer; text-decoration:none; white-space:nowrap; transition:background .2s;
 }
 .ui-btn:hover { background:rgba(255,255,255,0.24); }
@@ -147,8 +156,8 @@ html, body { width:100%; height:100%; overflow:hidden; font-family:'Montserrat',
 @keyframes doFlip { 0%,30%{transform:rotate(0deg)} 70%,100%{transform:rotate(-90deg)} }
 .flip-title { font-size:17px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:10px; }
 .flip-msg   { font-size:12px; font-weight:300; color:rgba(255,255,255,0.55); line-height:1.7; max-width:250px; margin-bottom:24px; }
-.start-btn  { background:#fff; color:#000; border:none; padding:14px 36px; font-family:'Montserrat',sans-serif; font-size:13px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; border-radius:4px; cursor:pointer; }
-.skip-btn   { background:none; border:1px solid rgba(255,255,255,0.3); color:rgba(255,255,255,0.6); padding:10px 24px; font-family:'Montserrat',sans-serif; font-size:11px; border-radius:4px; cursor:pointer; }
+.start-btn  { background:#fff; color:#000; border:none; padding:14px 36px; font-family:'Montserrat',sans-serif; font-size:13px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; border-radius:999px; cursor:pointer; }
+.skip-btn   { background:none; border:1px solid rgba(255,255,255,0.3); color:rgba(255,255,255,0.6); padding:10px 24px; font-family:'Montserrat',sans-serif; font-size:11px; border-radius:999px; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -212,16 +221,9 @@ html, body { width:100%; height:100%; overflow:hidden; font-family:'Montserrat',
   </div>
 </div>
 
+<script src="projects.js"></script>
 <script>
-const PROJECTS = [
-  { key:'muds',      title:'MUDS',                 slides:['proyectos-img/MUDS_1.jpg','proyectos-img/MUDS_2.jpg'] },
-  { key:'neast',     title:'by Neast',              slides:['proyectos-img/Neast_1.jpg','proyectos-img/Neast_2.jpg'] },
-  { key:'lontra',    title:'Lontra Platform',       slides:['proyectos-img/Lontra_Platform_01.jpg','proyectos-img/Lontra_Platform_02.jpg','proyectos-img/Lontra_Platform_03.jpg'] },
-  { key:'konatec',   title:'Konatec',               slides:['proyectos-img/Konatec_01.jpg','proyectos-img/Konatec_02.jpg'] },
-  { key:'copihue',   title:'Espacio Copihue',       slides:['proyectos-img/Espacio_Copihue_01.jpg','proyectos-img/Espacio_Copihue_02.jpg'] },
-  { key:'cambridge', title:'Cambridge & José Cruz', slides:['proyectos-img/Cambridge_01.jpg','proyectos-img/Cambridge_03.jpg','proyectos-img/Cambridge_04.jpg'] },
-  { key:'refugio',   title:'Refugio Prisma',        slides:['proyectos-img/Refugio_Prisma_01.jpg','proyectos-img/Refugio_Prisma_02.jpg'] }
-];
+/* La lista de proyectos vive en projects.js (se carga antes de este script) */
 
 let projIdx = 0;
 let current = 0;
@@ -261,6 +263,12 @@ function loadProject(idx, startSlide) {
     const img = document.createElement('img');
     img.src = src;
     img.alt = proj.title + ' ' + (i + 1);
+    img.onerror = () => {
+      const err = document.createElement('div');
+      err.className = 'slide-err';
+      err.textContent = 'No se pudo cargar esta imagen';
+      img.replaceWith(err);
+    };
     div.appendChild(img);
     viewer.appendChild(div);
   });
@@ -297,8 +305,10 @@ function updateUI() {
 
 /* ─── Loading animation: slow dots, 600ms per step ─── */
 let dotsTimer = null;
+let transitioning = false; /* evita lanzar varias transiciones a la vez */
 
 function showLoading(direction, projTitle) {
+  clearInterval(dotsTimer);
   ldDir.textContent   = direction;  /* "Siguiente proyecto" | "Proyecto anterior" */
   ldTitle.textContent = projTitle;
   ldDots.textContent  = '.';
@@ -328,16 +338,19 @@ const TRANSITION_MS = 2200; /* 3 dots × 600ms + fade in/out ≈ 2.2s */
 
 function goToProject(idx, startSlide, direction) {
   const target = PROJECTS[idx];
-  if (!target) return;
+  if (!target || transitioning) return;
+  transitioning = true;
   showLoading(direction, target.title);
   setTimeout(() => {
     loadProject(idx, startSlide);
     hideLoading();
     showUI();
+    transitioning = false;
   }, TRANSITION_MS);
 }
 
 function next() {
+  if (transitioning) return;
   const slides = viewer.querySelectorAll('.slide');
   if (current < slides.length - 1) {
     slides[current].classList.remove('active');
@@ -350,6 +363,7 @@ function next() {
 }
 
 function prev() {
+  if (transitioning) return;
   const slides = viewer.querySelectorAll('.slide');
   if (current > 0) {
     slides[current].classList.remove('active');
@@ -373,11 +387,22 @@ document.addEventListener('keydown', e => {
 });
 
 /* ─── Touch swipe ─── */
-let tx = 0;
-viewer.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, {passive:true});
-viewer.addEventListener('touchend', e => {
+/* Escucha en todo el documento: el overlay #ui cubre el visor y se come los toques */
+let tx = 0, ty = 0, swipeOk = false;
+document.addEventListener('touchstart', e => {
+  tx = e.touches[0].clientX;
+  ty = e.touches[0].clientY;
+  /* No contar como swipe si el toque empieza en un botón/enlace o hay overlays encima */
+  const onControl = !!e.target.closest('.ui-btn, .nav-arrow, a, button');
+  const flipVisible = getComputedStyle(document.getElementById('flip-prompt')).display !== 'none';
+  swipeOk = !onControl && !flipVisible && !loading.classList.contains('show');
+}, {passive:true});
+document.addEventListener('touchend', e => {
+  if (!swipeOk) return;
+  swipeOk = false;
   const dx = e.changedTouches[0].clientX - tx;
-  if (Math.abs(dx) < 40) return;
+  const dy = e.changedTouches[0].clientY - ty;
+  if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return; /* ignora gestos verticales */
   if (dx < 0) next(); else prev();
 });
 
@@ -404,15 +429,34 @@ document.addEventListener('fullscreenchange', () => {
   exitFsBtn.style.display  = fs ? 'inline-flex' : 'none';
 });
 
-/* Auto fullscreen on desktop */
+/* Auto fullscreen on desktop.
+   Los navegadores bloquean la pantalla completa si no hubo un clic/tecla del usuario,
+   así que se intenta al cargar y, si falla, se reintenta UNA vez en la primera interacción. */
 const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 if (!isMobile) {
-  setTimeout(() => document.documentElement.requestFullscreen().catch(() => {}), 300);
+  let fsTried = false;
+  const tryAutoFS = () => {
+    if (fsTried || document.fullscreenElement) return;
+    fsTried = true;
+    document.documentElement.requestFullscreen().catch(() => {});
+  };
+  /* Intento al cargar; si el navegador lo bloquea, se reintenta en el primer gesto válido */
+  document.documentElement.requestFullscreen().then(() => { fsTried = true; }).catch(() => {
+    const onGesture = e => {
+      if (e.type === 'keydown' && !['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) return;
+      if (e.target.closest && e.target.closest('a')) return; /* no al hacer clic en "Cerrar" */
+      tryAutoFS();
+      document.removeEventListener('click', onGesture);
+      document.removeEventListener('keydown', onGesture);
+    };
+    document.addEventListener('click', onGesture);
+    document.addEventListener('keydown', onGesture);
+  });
 }
 
 /* ─── Init ─── */
 const params = new URLSearchParams(window.location.search);
-const key    = params.get('p') || 'muds';
+const key    = params.get('p') || PROJECTS[0].key;
 const idx    = Math.max(0, PROJECTS.findIndex(p => p.key === key));
 loadProject(idx, 0);
 showUI();
