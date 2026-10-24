@@ -157,7 +157,18 @@ html, body { width:100%; height:100%; overflow:hidden; font-family:'Montserrat',
 .flip-title { font-size:17px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:10px; }
 .flip-msg   { font-size:12px; font-weight:300; color:rgba(255,255,255,0.55); line-height:1.7; max-width:250px; margin-bottom:24px; }
 .start-btn  { background:#fff; color:#000; border:none; padding:14px 36px; font-family:'Montserrat',sans-serif; font-size:13px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; border-radius:999px; cursor:pointer; }
-.skip-btn   { background:none; border:1px solid rgba(255,255,255,0.3); color:rgba(255,255,255,0.6); padding:10px 24px; font-family:'Montserrat',sans-serif; font-size:11px; border-radius:999px; cursor:pointer; }
+.skip-btn   { background:none; border:1px solid rgba(255,255,255,0.35); color:rgba(255,255,255,0.75); padding:13px 28px; font-family:'Montserrat',sans-serif; font-size:11px; border-radius:999px; cursor:pointer; }
+
+/* ─── PANTALLAS ANGOSTAS (celular en vertical): botones de la barra solo con ícono ─── */
+.proj-title { min-width:0; padding-right:12px; }
+@media (max-width:520px) {
+  #topbar { padding:16px 16px; }
+  .proj-title { font-size:11px; letter-spacing:0.1em; line-height:1.4; }
+  .topbar-right { gap:8px; flex-shrink:0; }
+  .ui-btn { width:40px; height:40px; padding:0; justify-content:center; gap:0; }
+  .ui-btn .ui-label { display:none; }
+  .ui-btn svg { width:15px; height:15px; }
+}
 
 /* ─── AVISO (p. ej. cuando el navegador no permite pantalla completa) ─── */
 #toast {
@@ -178,12 +189,13 @@ html, body { width:100%; height:100%; overflow:hidden; font-family:'Montserrat',
     <div class="phone-anim"></div>
     <h2 class="flip-title">Gira tu teléfono</h2>
     <p class="flip-msg">Para ver el proyecto, gira tu dispositivo a modo horizontal.</p>
+    <button class="skip-btn" onclick="skipToViewer()">Continuar sin girar</button>
   </div>
   <div id="flip-phase2">
     <h2 class="flip-title">¡Listo!</h2>
     <p class="flip-msg">Presiona comenzar para entrar al modo presentación.</p>
     <button class="start-btn" onclick="startPresentation()">Comenzar</button>
-    <button class="skip-btn"  onclick="skipToViewer()">Continuar sin rotar</button>
+    <button class="skip-btn"  onclick="skipToViewer()">Continuar sin girar</button>
   </div>
 </div>
 
@@ -202,17 +214,17 @@ html, body { width:100%; height:100%; overflow:hidden; font-family:'Montserrat',
   <div id="topbar">
     <div class="proj-title" id="projTitle">PROYECTO</div>
     <div class="topbar-right">
-      <button class="ui-btn" id="exitFsBtn" style="display:none" onclick="exitFS()">
+      <button class="ui-btn" id="exitFsBtn" style="display:none" onclick="exitFS()" aria-label="Salir de presentación">
         <svg viewBox="0 0 14 14" fill="none"><path d="M5 2H2v3M9 2h3v3M2 9v3h3M12 9v3h-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        Salir de presentación
+        <span class="ui-label">Salir de presentación</span>
       </button>
-      <button class="ui-btn" id="enterFsBtn" onclick="enterFS()">
+      <button class="ui-btn" id="enterFsBtn" onclick="enterFS()" aria-label="Modo presentación">
         <svg viewBox="0 0 14 14" fill="none"><path d="M2 5V2h3M9 2h3v3M2 9v3h3M12 9v3h-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        Modo presentación
+        <span class="ui-label">Modo presentación</span>
       </button>
-      <a href="proyectos.html" class="ui-btn">
+      <a href="proyectos.html" class="ui-btn" aria-label="Cerrar">
         <svg viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M2 10L10 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        Cerrar
+        <span class="ui-label">Cerrar</span>
       </a>
     </div>
   </div>
@@ -410,7 +422,8 @@ document.addEventListener('touchstart', e => {
   /* No contar como swipe si el toque empieza en un botón/enlace o hay overlays encima */
   const onControl = !!e.target.closest('.ui-btn, .nav-arrow, a, button');
   const flipVisible = getComputedStyle(document.getElementById('flip-prompt')).display !== 'none';
-  swipeOk = !onControl && !flipVisible && !loading.classList.contains('show');
+  const pinching = e.touches.length > 1 || (window.visualViewport && window.visualViewport.scale > 1.01);
+  swipeOk = !onControl && !flipVisible && !pinching && !loading.classList.contains('show');
 }, {passive:true});
 document.addEventListener('touchend', e => {
   if (!swipeOk) return;
@@ -542,12 +555,19 @@ function startPresentation() {
     .catch(() => {});   /* sin aviso: en iPhone no existe pantalla completa y el visor funciona igual */
   showUI();
 }
-function skipToViewer() {
+function skipToViewer(remember = true) {
   document.getElementById('flip-prompt').style.display = 'none';
   viewer.style.display = 'flex';
   uiEl.style.display   = 'block';
+  /* Si elige seguir en vertical, no se le vuelve a preguntar en los otros proyectos de esta visita */
+  if (remember) { try { sessionStorage.setItem('viewerPortraitOk', '1'); } catch (e) {} }
   showUI();
 }
+/* Al abrir otro proyecto en la misma visita: si ya eligió ver en vertical, entra directo */
+try {
+  if (sessionStorage.getItem('viewerPortraitOk') === '1' &&
+      getComputedStyle(document.getElementById('flip-prompt')).display !== 'none') skipToViewer(false);
+} catch (e) {}
 </script>
 </body>
 </html>
