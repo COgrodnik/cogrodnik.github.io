@@ -158,6 +158,17 @@ html, body { width:100%; height:100%; overflow:hidden; font-family:'Montserrat',
 .flip-msg   { font-size:12px; font-weight:300; color:rgba(255,255,255,0.55); line-height:1.7; max-width:250px; margin-bottom:24px; }
 .start-btn  { background:#fff; color:#000; border:none; padding:14px 36px; font-family:'Montserrat',sans-serif; font-size:13px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; border-radius:999px; cursor:pointer; }
 .skip-btn   { background:none; border:1px solid rgba(255,255,255,0.3); color:rgba(255,255,255,0.6); padding:10px 24px; font-family:'Montserrat',sans-serif; font-size:11px; border-radius:999px; cursor:pointer; }
+
+/* ─── AVISO (p. ej. cuando el navegador no permite pantalla completa) ─── */
+#toast {
+  position:fixed; left:50%; bottom:64px; z-index:60;
+  transform:translate(-50%, 8px); max-width:min(560px, 90vw);
+  background:rgba(18,18,18,0.94); border:1px solid rgba(255,255,255,0.25); color:#fff;
+  font-size:12px; font-weight:400; line-height:1.55; letter-spacing:0.02em; text-align:center;
+  padding:12px 20px; border-radius:18px;
+  opacity:0; pointer-events:none; transition:opacity .3s ease, transform .3s ease;
+}
+#toast.show { opacity:1; transform:translate(-50%, 0); }
 </style>
 </head>
 <body>
@@ -177,6 +188,8 @@ html, body { width:100%; height:100%; overflow:hidden; font-family:'Montserrat',
 </div>
 
 <div id="viewer"></div>
+
+<div id="toast" role="status" aria-live="polite"></div>
 
 <!-- Loading overlay: direction label + project title + slow dots -->
 <div id="loading">
@@ -381,8 +394,10 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next();
   if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   prev();
   if (e.key === 'Escape') {
-    if (document.fullscreenElement) document.exitFullscreen();
-    else window.location.href = 'proyectos.html';
+    if (fsEl()) exitFS();
+    /* Algunos navegadores entregan el Esc a la página justo después de salir de pantalla completa:
+       se ignora durante un instante para que no te saque del visor. */
+    else if (performance.now() - lastFsExit > 700) window.location.href = 'proyectos.html';
   }
 });
 
@@ -420,34 +435,76 @@ function showUI() {
 document.addEventListener('mousemove', showUI);
 document.addEventListener('touchstart', showUI, {passive:true});
 
-/* ─── Fullscreen ─── */
-function enterFS() { document.documentElement.requestFullscreen().catch(() => {}); }
-function exitFS()  { document.exitFullscreen(); }
-document.addEventListener('fullscreenchange', () => {
-  const fs = !!document.fullscreenElement;
+/* ─── Fullscreen ───
+   Funciona en Chrome, Edge, Firefox y Safari (con y sin prefijo). Si el navegador/dispositivo no lo permite
+   (p. ej. iPhone o el navegador integrado de Instagram/LinkedIn) se muestra un aviso explicando por qué. */
+const fsRoot = document.documentElement;
+const fsReq  = fsRoot.requestFullscreen || fsRoot.webkitRequestFullscreen || fsRoot.msRequestFullscreen;
+const fsExitFn = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+const fsEl   = () => document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || null;
+const fsAllowed = !!fsReq && ((document.fullscreenEnabled ?? document.webkitFullscreenEnabled) !== false);
+const inAppBrowser = /FBAN|FBAV|Instagram|LinkedInApp|Line\/|Snapchat|MicroMessenger|TikTok|Twitter|GSA\//i.test(navigator.userAgent);
+let lastFsExit = -Infinity;
+
+/* Aviso flotante */
+const toastEl = document.getElementById('toast');
+let toastTimer = null;
+function showToast(msg, ms = 7000) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
+}
+
+/* Devuelve siempre una Promesa (los Safari antiguos no la devuelven) */
+function requestFS() {
+  if (!fsAllowed) return Promise.reject(Object.assign(new Error('unsupported'), {name:'Unsupported'}));
+  try {
+    const r = fsRoot.requestFullscreen ? fsReq.call(fsRoot, {navigationUI:'hide'}) : fsReq.call(fsRoot);
+    return (r && typeof r.then === 'function') ? r : Promise.resolve();
+  } catch (err) { return Promise.reject(err); }
+}
+function exitFS() {
+  if (!fsExitFn) return;
+  try { const r = fsExitFn.call(document); if (r && r.catch) r.catch(() => {}); } catch (e) {}
+}
+function explainFsFailure(err) {
+  if (inAppBrowser) {
+    showToast('Estás en el navegador integrado de una app (Instagram, LinkedIn, etc.), que bloquea la pantalla completa. Ábrelo en Safari o Chrome.');
+  } else if (!fsAllowed) {
+    showToast('Este navegador no permite pantalla completa en esta página. (En iPhone, Safari no la ofrece para sitios web; en computador, Android e iPad sí funciona.)');
+  } else {
+    showToast('El navegador bloqueó la pantalla completa. Vuelve a presionar «Modo presentación».');
+  }
+  console.warn('Pantalla completa no disponible:', err && (err.name + ': ' + err.message));
+}
+function enterFS() {
+  if (fsEl()) return;
+  requestFS().catch(explainFsFailure);
+}
+function onFsChange() {
+  const fs = !!fsEl();
+  if (!fs) lastFsExit = performance.now();
   enterFsBtn.style.display = fs ? 'none'        : 'inline-flex';
   exitFsBtn.style.display  = fs ? 'inline-flex' : 'none';
-});
+}
+document.addEventListener('fullscreenchange', onFsChange);
+document.addEventListener('webkitfullscreenchange', onFsChange);
+if (!fsAllowed) enterFsBtn.title = 'Tu navegador no permite pantalla completa';
 
-/* Auto fullscreen on desktop.
-   Los navegadores bloquean la pantalla completa si no hubo un clic/tecla del usuario,
-   así que se intenta al cargar y, si falla, se reintenta UNA vez en la primera interacción. */
+/* Pantalla completa automática en escritorio.
+   Los navegadores la bloquean sin un clic/tecla del usuario: se intenta al cargar y, si falla,
+   se reintenta UNA vez en el primer clic en pantalla o flecha del teclado (sin avisos: es un extra). */
 const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-if (!isMobile) {
-  let fsTried = false;
-  const tryAutoFS = () => {
-    if (fsTried || document.fullscreenElement) return;
-    fsTried = true;
-    document.documentElement.requestFullscreen().catch(() => {});
-  };
-  /* Intento al cargar; si el navegador lo bloquea, se reintenta en el primer gesto válido */
-  document.documentElement.requestFullscreen().then(() => { fsTried = true; }).catch(() => {
+if (!isMobile && fsAllowed) {
+  requestFS().catch(() => {
     const onGesture = e => {
       if (e.type === 'keydown' && !['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) return;
-      if (e.target.closest && e.target.closest('a')) return; /* no al hacer clic en "Cerrar" */
-      tryAutoFS();
+      /* los botones (Modo presentación, Cerrar…) y enlaces se encargan solos */
+      if (e.target.closest && e.target.closest('a, .ui-btn')) return;
       document.removeEventListener('click', onGesture);
       document.removeEventListener('keydown', onGesture);
+      if (!fsEl()) requestFS().catch(() => {});
     };
     document.addEventListener('click', onGesture);
     document.addEventListener('keydown', onGesture);
@@ -478,9 +535,11 @@ function startPresentation() {
   document.getElementById('flip-prompt').style.display = 'none';
   viewer.style.display = 'flex';
   uiEl.style.display   = 'block';
-  document.documentElement.requestFullscreen()
-    .then(() => screen.orientation?.lock('landscape').catch(() => {}))
-    .catch(() => {});
+  requestFS()
+    .then(() => {
+      try { const l = screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape'); if (l && l.catch) l.catch(() => {}); } catch (e) {}
+    })
+    .catch(() => {});   /* sin aviso: en iPhone no existe pantalla completa y el visor funciona igual */
   showUI();
 }
 function skipToViewer() {
