@@ -17,7 +17,10 @@
 <meta name="twitter:card" content="summary">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,300;1,400;1,700;1,800&family=Shadows+Into+Light&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,300;1,400;1,700;1,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="fonts.css">
+<link rel="preload" href="fonts/PowerGrotesk-Heavy.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/PowerGrotesk-UltraBold.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { overflow-x: hidden; }
@@ -63,30 +66,24 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   max-width: 500px;
 }
 
-.hola-title {
-  font-family: 'Shadows Into Light', cursive;
-  transform: rotate(-2deg);
-  display: inline-block;
-  font-size: clamp(44px, 5.5vw, 68px);
-  font-weight: 400; color: #1a1a1a;
-  line-height: 1; margin-bottom: 20px;
-}
-.about-name-h { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+.hola-title { font-family: var(--font-title, 'Montserrat', sans-serif); font-weight: 900; font-size: clamp(40px, 5vw, 62px); letter-spacing: -0.01em; display: inline-block;
+  
+   color: #1a1a1a;
+  line-height: 1; margin-bottom: 20px; }
+.about-name-h { font-size: 15px; font-weight: 800; font-family: var(--font-sub, 'Montserrat', sans-serif);   color: #1a1a1a; margin-bottom: 4px; }
 .about-degree { font-size: clamp(11px, 1.45vh, 13px); color: #888; line-height: 1.6; margin-bottom: 12px; }
 
 .about-p { font-size: clamp(11px, 1.45vh, 13px); color: #555; line-height: 1.75; margin-bottom: 8px; }
 
 .cta-row { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
-.btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  padding: 12px 36px; font-family: 'Montserrat', sans-serif;
-  font-size: 12px; font-weight: 600; letter-spacing: 0.05em;
+.btn { font-weight: 800; font-family: var(--font-sub, 'Montserrat', sans-serif);  display: inline-flex; align-items: center; justify-content: center;
+  padding: 12px 36px; 
+  font-size: 12px;  letter-spacing: 0.05em;
   border-radius: 999px; text-decoration: none; border: none; cursor: pointer;
-  transition: transform .15s ease, opacity .15s ease;
-}
+  transition: transform .15s ease, opacity .15s ease; }
 .btn:hover { transform: translateY(-2px); opacity: .88; }
 .btn-dark  { background: #2d2d2d; color: #fff; }
-.btn-cream { background: #d9d9d9; color: #4a4a4a; font-weight: 600; }
+.btn-cream { font-weight: 800; background: #d9d9d9; color: #4a4a4a; }
 
 .photo-col {
   flex-shrink: 0; display: flex; align-items: center;
@@ -136,13 +133,13 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
 .hero-logo img { height: 32px; width: auto; display: block; }
 
 .hero-center { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; }
-.hero-subtitle { font-size:15px; font-weight:300; font-style:italic; letter-spacing:0.1em; color:rgba(255,255,255,0.52); margin-bottom:2px; }
-.hero-title-text { font-size:clamp(56px,8.5vw,100px); font-weight:800; font-style:italic; letter-spacing:-0.025em; line-height:0.87; color:#fff; text-transform:uppercase; }
-.hero-web { font-size:clamp(24px,3.6vw,44px); font-weight:300; font-style:italic; color:rgba(255,255,255,0.72); text-align:right; margin-top:6px; }
+.hero-subtitle { margin-bottom: 12px; font-size:15px; font-weight:300; font-style:italic; letter-spacing:0.1em; color:rgba(255,255,255,0.52); }
+.hero-title-text { font-family: var(--font-title, 'Montserrat', sans-serif); font-weight: 900; font-style: normal; letter-spacing: -0.01em; line-height: 0.9; font-size:clamp(56px,8.5vw,100px);     color:#fff; text-transform:uppercase; }
+.hero-web { margin-top: 10px; font-size:clamp(24px,3.6vw,44px); font-weight:300; font-style:italic; color:rgba(255,255,255,0.72); text-align:right; }
 
 .hero-bottom { position:absolute; bottom:36px; left:52px; right:52px; display:flex; align-items:flex-end; justify-content:space-between; }
-.hero-name { font-size:11px; font-weight:800; letter-spacing:0.22em; text-transform:uppercase; color:#fff; line-height:1.4; }
-.hero-name span { font-weight:400; color:rgba(255,255,255,0.38); margin-left:4px; }
+.hero-name { font-weight: 800; font-family: var(--font-sub, 'Montserrat', sans-serif);  font-size:11px;  letter-spacing:0.22em; text-transform:uppercase; color:#fff; line-height:1.4; }
+.hero-name span { font-weight: 800; color:rgba(255,255,255,0.38); margin-left:4px; }
 .desliza-group { position:absolute; left:50%; bottom:0; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:4px; }
 .desliza-label { font-size:11px; font-weight:300; font-style:italic; color:rgba(255,255,255,0.42); letter-spacing:0.1em; }
 .desliza-group svg { width:18px; height:18px; animation:bounceDown 2.2s ease-in-out infinite; }
@@ -156,8 +153,8 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   color:#fff; opacity:0; pointer-events:none; transition:opacity .3s ease;
 }
 #name-bar.show { opacity:1; pointer-events:all; }
-.bar-name { font-size:11px; font-weight:800; letter-spacing:0.22em; text-transform:uppercase; }
-.bar-name span { font-weight:400; color:rgba(255,255,255,0.38); margin-left:10px; }
+.bar-name { font-weight: 800; font-family: var(--font-sub, 'Montserrat', sans-serif);  font-size:11px;  letter-spacing:0.22em; text-transform:uppercase; }
+.bar-name span { font-weight: 800; color:rgba(255,255,255,0.38); margin-left:10px; }
 .bar-year { font-size:11px; font-weight:300; letter-spacing:0.2em; color:rgba(255,255,255,0.38); }
 
 @keyframes bounceDown { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
@@ -244,6 +241,9 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   .cta-row { margin-top: 16px; }
   #site-footer { margin-top: 18px; padding-top: 14px; padding-bottom: 16px; }
 }
+
+/* Título de la portada: más ancho con Power Grotesk Heavy, así que en celular se ajusta al ancho de pantalla */
+@media (max-width: 600px) { .hero-title-text { font-size: 13vw; } }
 </style>
 </head>
 <body>
@@ -252,13 +252,13 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
 <section id="about">
   <div class="about-inner">
     <div class="about-text">
-      <h2 class="hola-title">¡HOLA!</h2>
+      <h2 class="hola-title">HOLA</h2>
       <h3 class="about-name-h">Mi nombre es Cristóbal Ogrodnik Bert</h3>
-      <p class="about-degree">Ingeniero en diseño con Magíster en Innovación y Diseño de la Universidad Adolfo Ibáñez, Santiago, Chile.</p>
-      <p class="about-p">Soy amante de la creación de productos únicos, con impacto e identidad. Me apasiona ver cómo las cosas pasan del mundo de las ideas al físico, con todos los desafíos, aprendizajes y procesos que conlleva lograrlo.</p>
-      <p class="about-p">Por otro lado, tengo alma emprendedora, siendo parte de distintos proyectos. Uno de los más destacados es Neast Components™, empresa de componentes de seguridad para ciclistas de montaña, en la que diseñamos productos únicos pensados en los ciclistas chilenos. Recientemente, comencé a desarrollar una marca de juguetes especializados para perros, llamada Yuki Pet.</p>
-      <p class="about-p">Me interesan mucho las herramientas de fabricación digital: Fabricación aditiva en todos sus formatos (SLA, SLS, FDM, etc), robótica y fabricación sustractiva (láser, CNC, etc). Tengo experiencia trabajando en el FabLab de Diseño de la Universidad Adolfo Ibáñez.</p>
-      <p class="about-p">Paralelamente, también llevo un par de años desarrollándome en la fotografía y filmmaking.</p>
+      <p class="about-degree">Ingeniero en Diseño con Magíster en Innovación y Diseño de la Universidad Adolfo Ibáñez, Santiago, Chile.</p>
+      <p class="about-p">Me apasiona crear productos únicos, con impacto e identidad, y transformar ideas en objetos reales, enfrentando los desafíos y aprendizajes que implica cada proceso.</p>
+      <p class="about-p">Con espíritu emprendedor, he participado en distintos proyectos, entre ellos Neast Components™, empresa dedicada al diseño de componentes de seguridad para ciclistas de montaña, y más recientemente Yuki Pet, marca de juguetes especializados para perros.</p>
+      <p class="about-p">Tengo especial interés en la fabricación digital, desde tecnologías aditivas (SLA, SLS, FDM) hasta robótica y procesos sustractivos (láser, CNC). Además, cuento con experiencia en el FabLab de Diseño de la Universidad Adolfo Ibáñez.</p>
+      <p class="about-p">Paralelamente, llevo algunos años explorando y desarrollando mis habilidades en fotografía y filmmaking.</p>
       <div class="cta-row">
         <a href="proyectos.html" class="btn btn-dark">Proyectos</a>
         <a href="resumen.html" class="btn btn-cream">Más</a>
