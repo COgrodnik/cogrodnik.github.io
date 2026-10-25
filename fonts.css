@@ -1,0 +1,26 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   TIPOGRAFÍAS DEL SITIO  (un solo lugar para cambiarlas)
+
+   Power Grotesk Heavy     (900) → títulos importantes: PORTFOLIO, HOLA, PROYECTOS, RESUMEN
+                                    y nombre del proyecto en la pantalla "Siguiente proyecto"
+   Power Grotesk UltraBold (800) → subtítulos y texto de los botones
+   Montserrat                    → párrafos y todo lo demás (y reemplazo de cualquier letra
+                                    que la fuente Power Grotesk no incluya)
+
+   Para usar la versión COMPLETA (con tildes, ñ y puntuación) reemplaza los dos archivos de
+   la carpeta fonts/ conservando el mismo nombre: PowerGrotesk-Heavy.woff2 y PowerGrotesk-UltraBold.woff2.
+   ═══════════════════════════════════════════════════════════════════════ */
+@font-face {
+  font-family: 'Power Grotesk';
+  src: url('fonts/PowerGrotesk-UltraBold.woff2') format('woff2');
+  font-weight: 800; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Power Grotesk';
+  src: url('fonts/PowerGrotesk-Heavy.woff2') format('woff2');
+  font-weight: 900; font-style: normal; font-display: swap;
+}
+:root {
+  --font-title: 'Power Grotesk', 'Montserrat', sans-serif;   /* usar con font-weight: 900 */
+  --font-sub:   'Power Grotesk', 'Montserrat', sans-serif;   /* usar con font-weight: 800 */
+}
