@@ -82,15 +82,6 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
 
 .about-p { font-size: clamp(11px, 1.45vh, 13px); color: #555; line-height: 1.75; margin-bottom: 8px; }
 
-.cta-row { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
-.btn { font-weight: 800; font-family: var(--font-sub, 'Montserrat', sans-serif);  display: inline-flex; align-items: center; justify-content: center;
-  padding: 12px 36px; 
-  font-size: 12px;  letter-spacing: 0.05em;
-  border-radius: 999px; text-decoration: none; border: none; cursor: pointer;
-  transition: transform .15s ease, opacity .15s ease; }
-.btn:hover { transform: translateY(-2px); opacity: .88; }
-.btn-dark  { background: #2d2d2d; color: #fff; }
-.btn-cream { font-weight: 800; background: #d9d9d9; color: #4a4a4a; }
 
 .photo-col {
   flex-shrink: 0; display: flex; align-items: center;
@@ -112,6 +103,24 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
   color:rgba(255,255,255,0.5); font-size:11px; font-weight:600;
   letter-spacing:0.06em; text-align:center; padding:24px;
 }
+
+/* Indicador "scroll" al pie de la biografía: invita a seguir bajando para ver los proyectos */
+#bio-cue {
+  position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); z-index: 3;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 30px 90px 16px; cursor: pointer; border: none;
+  background: linear-gradient(to top, #fff 55%, rgba(255,255,255,0));   /* el texto que pase por detrás se desvanece */
+  font-family: 'Montserrat', sans-serif; opacity: 0; pointer-events: none;
+}
+#bio-cue.show { pointer-events: auto; }
+.cue-label { font-size: 12px; font-weight: 400; font-style: italic; color: rgba(0,0,0,0.62); letter-spacing: 0.08em; }
+#bio-cue svg { width: 18px; height: 18px; animation: bounceDown 2.2s ease-in-out infinite; }
+@media (max-width: 600px) {
+  #bio-cue { width: 100%; padding: 30px 0 14px; }
+  #about .about-inner { padding-bottom: 104px; }           /* deja libre el pie de la biografía para que no quede bajo el indicador */
+}
+@media (min-width: 601px) { #about .about-inner { padding-bottom: 72px; } }
+@media (max-height: 720px) and (min-width: 601px) { #about .about-inner { padding-bottom: 60px; } }
 
 /* Botón para volver al inicio — flota abajo a la derecha desde que aparece el resumen */
 #arrow-up {
@@ -186,7 +195,6 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
   .hola-title { font-size: 38px; margin-bottom: 14px; }
   .about-name-h { font-size: 14px; }
   .about-degree, .about-p { font-size: 12px; }
-  .btn { padding: 11px 26px; font-size: 12px; }
   .hero-name { font-size: 9px; letter-spacing: 0.15em; max-width: 30vw; word-break: break-word; }
   .hero-logo { left: 20px; top: 24px; font-size: 11px; }
   .hero-bottom { left: 20px; right: 20px; bottom: 28px; }
@@ -231,6 +239,8 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
 
 /* Desktop: "scroll", Mobile: "desliza" via CSS */
 @media (max-width: 600px) {
+  #cueLabel { font-size: 0 !important; }
+  #cueLabel::after { content: "desliza para ver proyectos"; font-size: 12px; font-weight: 400; font-style: italic; color: rgba(0,0,0,0.62); letter-spacing: 0.08em; }
   #scrollLabel { font-size: 0 !important; }
   #scrollLabel::after {
     content: "desliza";
@@ -247,7 +257,6 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
   .about-inner { padding-top: 64px; padding-bottom: 24px; }
   .hola-title { font-size: clamp(40px, 4.6vw, 52px); margin-bottom: 12px; }
   .about-p { margin-bottom: 6px; line-height: 1.65; }
-  .cta-row { margin-top: 16px; }
   #about .site-footer { margin-top: 18px; padding-top: 14px; padding-bottom: 16px; }
 }
 
@@ -606,7 +615,6 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
   position:relative; width:100%;
   --w:180px; --lh:92px;                         /* ancho de burbuja y alto de la zona de etiquetas (los calcula el JS) */
   height:calc(var(--w) / 0.44 + var(--lh) * 2 + 30px);
-  overflow-x:hidden; overflow-x:clip;           /* solo se recorta en horizontal: la sombra no se corta */
   touch-action:pan-y; overscroll-behavior-x:contain;
   user-select:none; -webkit-user-select:none;
   cursor:grab; outline:none;
@@ -656,7 +664,6 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
    Solo se recorta en horizontal (los vecinos que salen de pantalla). */
 .mobile-stage {
   position:relative; height:var(--mh, 570px);       /* el alto lo calcula el JS según la pantalla */
-  overflow-x:hidden; overflow-x:clip;
   touch-action:pan-y;               /* scroll vertical normal, el horizontal lo maneja el carrusel */
   user-select:none; -webkit-user-select:none;
   cursor:grab; outline:none;
@@ -705,10 +712,6 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
       <p class="about-p">Con espíritu emprendedor, he participado en distintos proyectos, entre ellos Neast Components™, empresa dedicada al diseño de componentes de seguridad para ciclistas de montaña, y más recientemente Yuki Pet, marca de juguetes especializados para perros.</p>
       <p class="about-p">Tengo especial interés en la fabricación digital, desde tecnologías aditivas (SLA, SLS, FDM) hasta robótica y procesos sustractivos (láser, CNC). Además, cuento con experiencia en el FabLab de Diseño de la Universidad Adolfo Ibáñez.</p>
       <p class="about-p">Paralelamente, llevo algunos años explorando y desarrollando mis habilidades en fotografía y filmmaking.</p>
-      <div class="cta-row">
-        <a href="#proyectos" class="btn btn-dark" data-goto="projects">Proyectos</a>
-        <a href="#resumen" class="btn btn-cream" data-goto="resumen">Más</a>
-      </div>
       <footer id="site-footer" class="site-footer">
         <a href="https://www.instagram.com/cristobalogrodnik" target="_blank" rel="noopener" class="footer-link" aria-label="Instagram">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
@@ -731,6 +734,11 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
     </div>
   </div>
 </section>
+
+    <button id="bio-cue" data-goto="projects" aria-label="Seguir bajando para ver los proyectos">
+      <span class="cue-label" id="cueLabel">scroll para ver proyectos</span>
+      <svg viewBox="0 0 18 18" fill="none"><path d="M3 6L9 12L15 6" stroke="rgba(0,0,0,0.62)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
 
     <section id="sec-projects" class="sec" aria-label="Proyectos">
       <div class="sec-nav sec-nav-compact">
@@ -1454,6 +1462,7 @@ function createDots(dotsEl, N, onPick) {
   const about    = document.getElementById('about');
   const proj     = document.getElementById('sec-projects');
   const resumen  = document.getElementById('sec-resumen');
+  const cue      = document.getElementById('bio-cue');
 
   /* Etapas del scroll, en alturas de pantalla (los mismos números definen el largo de #scene en el CSS: 355vh) */
   const K   = { HERO: 1, HOLD1: 0.35, SCALE: 0.9, HOLD2: 0.3 };
@@ -1518,6 +1527,11 @@ function createDots(dotsEl, N, onPick) {
     const a = (K.HERO + K.HOLD1) * vh, b = a + K.SCALE * vh;
     const p = clamp((smoothY - a) / (b - a), 0, 1);
     if (Math.abs(p - lastP) > 0.0004 || p === 0 || p === 1) { if (p !== lastP) applyProjects(p); lastP = p; }
+
+    /* 2b) Indicador "scroll" de la biografía: visible mientras se lee la biografía, se va al empezar la transición */
+    const cueOp = clamp((heroY - vh * 0.85) / (vh * 0.15), 0, 1) * clamp(1 - p / 0.06, 0, 1);
+    cue.style.opacity = cueOp.toFixed(3);
+    cue.classList.toggle('show', cueOp > 0.5);
 
     /* 3) Botón "volver al inicio": aparece cuando entra el resumen */
     arrowUp.classList.toggle('show', y > resumenTop - vh * 0.6);
