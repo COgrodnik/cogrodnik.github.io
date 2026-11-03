@@ -24,17 +24,24 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { overflow-x: hidden; }
-body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
+/* clip (no hidden): hidden convertiría el body en contenedor de scroll y rompería el 'sticky' del escenario */
+body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff; }
 
-/* Spacer drives the scroll — hero travel = 1×vh, then about is revealed */
-/* We only need enough scroll to fully reveal the about section */
-#spacer { height: 200vh; }
+/* ═══════════════════════════════════════
+   ESCENA — un solo recorrido con el scroll:
+   portada → biografía → proyectos (aparecen y crecen) → resumen
+   El escenario queda fijo (sticky) mientras dura la animación y luego se va con el scroll.
+   Largo de la escena (en alturas de pantalla) = 1 portada + 0.35 pausa + 0.9 aparición + 0.3 pausa + 1 salida
+   (los mismos números están en el JS: constante K).
+═══════════════════════════════════════ */
+#scene { position: relative; height: 355vh; height: 355dvh; }
+#stage { position: sticky; top: 0; height: 100vh; height: 100dvh; overflow: hidden; background: #fff; }
 
 /* ═══════════════════════════════════════
    LAYER 1 — ABOUT  (z-index 1, bottom)
 ═══════════════════════════════════════ */
 #about {
-  position: fixed;
+  position: absolute;
   inset: 0;
   background: #ffffff;
   z-index: 1;
@@ -106,16 +113,19 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   letter-spacing:0.06em; text-align:center; padding:24px;
 }
 
-/* Arrow up — appears at end of scroll */
+/* Botón para volver al inicio — flota abajo a la derecha desde que aparece el resumen */
 #arrow-up {
-  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
-  z-index: 30; display: flex; flex-direction: column; align-items: center; gap: 4px;
-  cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .3s ease;
-  background: none; border: none; font-family: 'Montserrat', sans-serif;
+  position: fixed; bottom: 24px; right: 24px; z-index: 30;
+  width: 46px; height: 46px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: #fff; border: 1px solid rgba(0,0,0,0.12);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.14), 0 2px 6px rgba(0,0,0,0.08);
+  cursor: pointer; opacity: 0; pointer-events: none; transform: translateY(8px);
+  transition: opacity .3s ease, transform .3s ease;
 }
-#arrow-up.show { opacity: 1; pointer-events: all; }
-.arrow-up-label { font-size: 11px; font-weight: 300; font-style: italic; color: rgba(0,0,0,0.4); letter-spacing: 0.1em; }
-#arrow-up svg { width: 18px; height: 18px; animation: bounceUp 2.2s ease-in-out infinite; }
+#arrow-up.show { opacity: 1; pointer-events: all; transform: translateY(0); }
+#arrow-up:hover { transform: translateY(-2px); }
+#arrow-up svg { width: 18px; height: 18px; }
 
 /* ═══════════════════════════════════════
    LAYER 2 — HERO  (z-index 10, top)
@@ -182,12 +192,11 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   .hero-bottom { left: 20px; right: 20px; bottom: 28px; }
   .hero-year { font-size: 9px; }
   #name-bar { padding: 14px 20px; }
-  /* El botón "inicio" flota sobre el texto que se desplaza: fondo con degradado para que no se encime */
-  #arrow-up { bottom: 0; padding: 26px 56px 14px; background: linear-gradient(to top, #fff 55%, rgba(255,255,255,0)); }
+  #arrow-up { right: 16px; bottom: 16px; width: 44px; height: 44px; }
 }
 
 /* ─── FOOTER ─── */
-#site-footer {
+.site-footer {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -239,17 +248,454 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   .hola-title { font-size: clamp(40px, 4.6vw, 52px); margin-bottom: 12px; }
   .about-p { margin-bottom: 6px; line-height: 1.65; }
   .cta-row { margin-top: 16px; }
-  #site-footer { margin-top: 18px; padding-top: 14px; padding-bottom: 16px; }
+  #about .site-footer { margin-top: 18px; padding-top: 14px; padding-bottom: 16px; }
 }
 
 /* Título de la portada: más ancho con Power Grotesk Heavy, así que en celular se ajusta al ancho de pantalla */
 @media (max-width: 600px) { .hero-title-text { font-size: 13vw; } }
+
+/* ═══════════════════════════════════════
+   SECCIONES (proyectos y resumen) — comparten encabezado y botones
+═══════════════════════════════════════ */
+.sec {
+  --dark: #1a1a1a; --white: #ffffff; --gray: #888888; --gray-light: #e8e8e8;
+  --btn-dark: #2d2d2d; --timeline-line: #d0d0d0;
+  color: var(--dark); font-family: 'Montserrat', sans-serif;
+}
+.sec-nav { display:flex; align-items:flex-start; justify-content:space-between; padding:36px 8% 24px; flex-wrap:wrap; gap:24px; }
+.sec-title {
+  font-family: var(--font-title, 'Montserrat', sans-serif); font-weight: 900;
+  font-size: clamp(38px, 6.2vw, 76px); letter-spacing: -0.01em;
+  display: inline-block; color: var(--dark); line-height: 1;
+}
+.sec-nav-buttons { display:flex; gap:12px; align-items:center; padding-top:8px; }
+.sec-btn {
+  font-weight: 800; font-family: var(--font-sub, 'Montserrat', sans-serif);
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:12px 32px; font-size:13px; letter-spacing:0.04em;
+  border-radius:999px; text-decoration:none; cursor:pointer; border:none;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.sec-btn:hover { transform: translateY(-1px); opacity: 0.85; }
+.sec-btn-dark  { background: var(--btn-dark); color: var(--white); }
+.sec-btn-light { background: #d9d9d9; color: #555; }
+
+/* ─── PROYECTOS: ocupa todo el escenario, aparece y crece con el scroll ─── */
+#sec-projects {
+  position:absolute; inset:0; z-index:2; background:#fff;
+  display:flex; flex-direction:column; padding-top:56px;        /* 56px: despeja la barra con el nombre */
+  opacity:0; visibility:hidden; pointer-events:none;
+  transform-origin:50% 50%; will-change: transform, opacity;
+}
+#about { transform-origin: 50% 50%; will-change: transform, opacity; }
+.sec-nav-compact { padding:6px 8% 0; align-items:center; flex-wrap:nowrap; gap:16px; }
+.sec-nav-compact .sec-title { font-size: clamp(26px, min(3.6vw, 6vh), 52px); }
+.sec-nav-compact .sec-nav-buttons { padding-top:0; }
+.sec-body { flex:1; min-height:0; display:flex; flex-direction:column; justify-content:center; padding-bottom:6px; }
+
+/* ─── RESUMEN: contenido normal que sigue después de la escena ─── */
+#sec-resumen { position:relative; z-index:3; background:#fff; padding-top:24px; }
+.site-footer-end { margin-top:0; padding:28px 52px 48px; }
+@media (max-width: 600px) { .site-footer-end { padding: 24px 24px 72px; } }
+
+/* ─── MAIN GRID ─── */
+  .resume-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 60px;
+    padding: 0 8% 80px;
+  }
+
+  /* ─── SECTION HEADERS ─── */
+  .section-header { font-weight: 800; font-family: var(--font-sub, 'Montserrat', sans-serif);  font-style: normal; font-size: 13px;
+    
+    
+    color: var(--gray);
+    letter-spacing: 0.05em;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--gray-light); }
+
+  /* ─── TIMELINE ─── */
+  .timeline {
+    position: relative;
+    padding-left: 0;
+  }
+
+  .timeline-item {
+    display: grid;
+    grid-template-columns: 140px 16px 1fr;
+    gap: 0 16px;
+    margin-bottom: 32px;
+    position: relative;
+  }
+
+  .timeline-meta {
+    text-align: right;
+    padding-top: 2px;
+  }
+
+  .timeline-location {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--dark);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .timeline-date {
+    font-size: 10px;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--gray);
+    display: block;
+  }
+
+  .timeline-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  .timeline-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--dark);
+    flex-shrink: 0;
+    margin-top: 4px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .timeline-line-segment {
+    width: 1px;
+    flex: 1;
+    background: var(--timeline-line);
+    margin-top: 4px;
+    min-height: 40px;
+  }
+
+  .timeline-content {}
+
+  .timeline-role {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 2px;
+    line-height: 1.3;
+  }
+
+  .timeline-company {
+    font-size: 11px;
+    font-weight: 600;
+    font-style: italic;
+    color: var(--gray);
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .timeline-desc {
+    font-size: 11px;
+    font-weight: 400;
+    color: #666;
+    line-height: 1.6;
+  }
+
+  /* ─── EDUCATION (same timeline style) ─── */
+  .edu-item {
+    display: grid;
+    grid-template-columns: 140px 16px 1fr;
+    gap: 0 16px;
+    margin-bottom: 28px;
+  }
+
+  .edu-meta { text-align: right; padding-top: 2px; }
+  .edu-location { font-size: 11px; font-weight: 700; color: var(--dark); display: block; margin-bottom: 2px; }
+  .edu-date { font-size: 10px; font-style: italic; color: var(--gray); display: block; }
+
+  .edu-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 2px;
+    line-height: 1.4;
+  }
+
+  .edu-institution {
+    font-size: 11px;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--gray);
+  }
+
+  /* ─── SKILLS SECTION ─── */
+  .skills-section {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px 60px;
+    margin-top: 40px;
+    padding-top: 40px;
+    border-top: 1px solid var(--gray-light);
+  }
+
+  .skills-group {}
+
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .skill-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .skill-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--gray-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--dark);
+    letter-spacing: -0.02em;
+    overflow: hidden;
+  }
+
+  .skill-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  .skill-name {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--dark);
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+
+  /* ─── LANGUAGES ─── */
+  .languages-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .lang-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .lang-flag {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--gray-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    overflow: hidden;
+  }
+
+  .lang-name {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--dark);
+    text-align: center;
+  }
+
+  .lang-level {
+    font-size: 9px;
+    font-weight: 400;
+    color: var(--gray);
+    text-align: center;
+  }
+
+  /* ─── REVEAL ANIMATIONS ─── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  .timeline-item, .edu-item {
+    opacity: 0;
+    transform: translateX(-16px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .timeline-item.visible, .edu-item.visible { opacity: 1; transform: translateX(0); }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 900px) {
+    .resume-grid { grid-template-columns: 1fr; }
+    .skills-section { grid-template-columns: 1fr; }
+    .timeline-item, .edu-item { grid-template-columns: 100px 16px 1fr; }
+  }
+
+  @media (max-width: 600px) {
+    .skills-grid { grid-template-columns: repeat(3, 1fr); }
+    .timeline-item, .edu-item { grid-template-columns: 80px 14px 1fr; }
+  }
+
+/* ─── FOOTER ─── */
+#site-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 28px 52px 32px;
+  background: transparent;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  margin-top: 40px;
+}
+.footer-link {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: #444; text-decoration: none;
+  transition: color .2s ease, transform .2s ease;
+}
+.footer-link:hover { color: #000; transform: translateY(-2px); }
+.footer-link svg { width: 20px; height: 20px; flex-shrink: 0; }
+.footer-divider { width: 1px; height: 16px; background: rgba(0,0,0,0.15); }
+
+
+
+@media (max-width: 700px) {
+  .sec-nav-compact { padding: 8px 6% 0; }
+  .sec-nav-compact .sec-nav-buttons { display: none; }          /* en celular los atajos sobran: se navega con el scroll */
+  .sec-nav-compact .sec-title { font-size: 34px; }
+}
+
+/* ═══ BURBUJAS (compartido) ═══ */
+.pill-name { font-size:12px; font-weight:700; color:var(--dark); margin-bottom:3px; overflow-wrap:anywhere; }
+.pill-desc { font-size:10px; color:var(--gray); line-height:1.5; overflow-wrap:anywhere; }
+.pill-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:linear-gradient(160deg,#888 0%,#444 100%); color:rgba(255,255,255,0.55); font-size:10px; font-weight:600; text-align:center; padding:12px; }
+
+/* ═══ DOTS (compartido): máximo 5 visibles; la ventana se desplaza y los extremos se achican si hay más ═══ */
+.m-dots { overflow:hidden; margin:2px auto 0; }
+.m-dots-track { display:flex; transition:transform .35s cubic-bezier(.22,.8,.3,1); }
+.m-dot { flex:0 0 16px; height:16px; padding:0; border:0; background:none; display:flex; align-items:center; justify-content:center; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.m-dot::after { content:''; width:7px; height:7px; border-radius:50%; background:rgba(0,0,0,0.22); transition:transform .3s ease, background .3s ease, opacity .3s ease; }
+.m-dot:hover::after { background:rgba(0,0,0,0.4); }
+.m-dot.active::after { background:var(--dark); transform:scale(1.3); }
+.m-dot.edge::after   { transform:scale(.6); }
+.m-dot.out::after    { transform:scale(0); opacity:0; }
+
+/* ═══ DESKTOP: carrusel infinito de 7 posiciones (5 nítidas + 2 asomadas y difuminadas en los extremos) ═══ */
+.desktop-projects { padding:0 6%; }
+.d-stage {
+  position:relative; width:100%;
+  --w:180px; --lh:92px;                         /* ancho de burbuja y alto de la zona de etiquetas (los calcula el JS) */
+  height:calc(var(--w) / 0.44 + var(--lh) * 2 + 30px);
+  overflow-x:hidden; overflow-x:clip;           /* solo se recorta en horizontal: la sombra no se corta */
+  touch-action:pan-y; overscroll-behavior-x:contain;
+  user-select:none; -webkit-user-select:none;
+  cursor:grab; outline:none;
+}
+.d-stage.dragging { cursor:grabbing; }
+.d-stage.dragging .d-slide, .d-stage.no-anim .d-slide { transition:none; }
+.d-slide {
+  position:absolute; top:0; left:50%; width:var(--w); margin-left:calc(var(--w) / -2);
+  display:grid; grid-template-rows:var(--lh) auto var(--lh);
+  transition:transform .55s cubic-bezier(.22,.8,.3,1), opacity .55s ease, filter .55s ease;
+  will-change:transform, opacity, filter;
+}
+.d-label { padding:0 6px; }
+.d-label.top    { align-self:end;   padding-bottom:14px; }   /* etiquetas arriba o abajo, alternadas */
+.d-label.bottom { align-self:start; padding-top:14px; }
+.d-label .pill-desc { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+
+.pill-card {
+  display:block; border-radius:200px; overflow:hidden; cursor:pointer; text-decoration:none;
+  background:#e0e0e0; width:100%; aspect-ratio:0.44; position:relative;
+  border:5px solid #ffffff;
+  box-shadow:0 8px 28px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10);
+  transition:transform .35s ease, box-shadow .3s ease;
+  -webkit-user-drag:none;
+}
+.pill-card:hover { transform:translateY(-8px) scale(1.02); box-shadow:0 28px 52px rgba(0,0,0,0.22), 0 4px 12px rgba(0,0,0,0.12); }
+.pill-card img { width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; -webkit-user-drag:none; }
+.pill-card::after {
+  content:attr(data-name);
+  position:absolute; inset:0;
+  background:rgba(0,0,0,0.52);
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:700; letter-spacing:0.1em;
+  color:#fff; opacity:0; transition:opacity .25s;
+  padding:12px; text-align:center; border-radius:200px; text-transform:uppercase;
+}
+.pill-card:hover::after { opacity:1; }
+.d-stage.dragging .pill-card:hover { transform:none; box-shadow:0 8px 28px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10); }
+.d-stage.dragging .pill-card::after { opacity:0; }
+
+.d-dots { margin-top:6px; }
+
+/* ═══ MOBILE CAROUSEL (infinito, con peek) ═══ */
+.mobile-projects { display:none; }
+
+/* El stage tiene alto fijo con espacio de sobra arriba/abajo: así la sombra de la burbuja no se corta.
+   Solo se recorta en horizontal (los vecinos que salen de pantalla). */
+.mobile-stage {
+  position:relative; height:var(--mh, 570px);       /* el alto lo calcula el JS según la pantalla */
+  overflow-x:hidden; overflow-x:clip;
+  touch-action:pan-y;               /* scroll vertical normal, el horizontal lo maneja el carrusel */
+  user-select:none; -webkit-user-select:none;
+  cursor:grab; outline:none;
+}
+.mobile-stage.dragging { cursor:grabbing; }
+.mobile-stage.dragging .m-slide { transition:none; }
+
+.m-slide {
+  position:absolute; top:10px; left:50%; width:280px; margin-left:-140px;
+  display:flex; flex-direction:column; align-items:center;
+  transition: transform .5s cubic-bezier(.22,.8,.3,1), opacity .5s ease, filter .5s ease;
+  will-change: transform, opacity, filter;
+}
+.m-label { width:100%; height:72px; padding:0 10px; margin-bottom:16px; text-align:center; transition:opacity .3s ease; }
+.m-label .pill-name { font-size:14px; margin-bottom:4px; }
+.m-label .pill-desc { font-size:11px; }
+
+.mobile-pill {
+  width:var(--mw, 180px); aspect-ratio:0.44; border-radius:200px; overflow:hidden; display:block;
+  text-decoration:none; background:#e0e0e0; border:5px solid #ffffff;
+  box-shadow:0 8px 28px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10);
+  -webkit-user-drag:none;
+}
+.mobile-pill img { width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; -webkit-user-drag:none; }
+#mDots { width:80px; }
+
+@media (max-width:700px) {
+  .desktop-projects { display:none; }
+  .mobile-projects  { display:block; }
+}
+
+
+.mobile-stage.no-anim .m-slide { transition:none; }
 </style>
 </head>
 <body>
-<div id="spacer"></div>
-
-<section id="about">
+<div id="scene">
+  <div id="stage">
+    <section id="about">
   <div class="about-inner">
     <div class="about-text">
       <h2 class="hola-title">HOLA</h2>
@@ -260,10 +706,10 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
       <p class="about-p">Tengo especial interés en la fabricación digital, desde tecnologías aditivas (SLA, SLS, FDM) hasta robótica y procesos sustractivos (láser, CNC). Además, cuento con experiencia en el FabLab de Diseño de la Universidad Adolfo Ibáñez.</p>
       <p class="about-p">Paralelamente, llevo algunos años explorando y desarrollando mis habilidades en fotografía y filmmaking.</p>
       <div class="cta-row">
-        <a href="proyectos.html" class="btn btn-dark">Proyectos</a>
-        <a href="resumen.html" class="btn btn-cream">Más</a>
+        <a href="#proyectos" class="btn btn-dark" data-goto="projects">Proyectos</a>
+        <a href="#resumen" class="btn btn-cream" data-goto="resumen">Más</a>
       </div>
-      <footer id="site-footer">
+      <footer id="site-footer" class="site-footer">
         <a href="https://www.instagram.com/cristobalogrodnik" target="_blank" rel="noopener" class="footer-link" aria-label="Instagram">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
         </a>
@@ -286,9 +732,356 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   </div>
 </section>
 
-<button id="arrow-up" onclick="window.scrollTo({top:0,behavior:'smooth'})">
-  <span class="arrow-up-label">inicio</span>
-  <svg viewBox="0 0 18 18" fill="none"><path d="M15 12L9 6L3 12" stroke="rgba(0,0,0,0.4)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <section id="sec-projects" class="sec" aria-label="Proyectos">
+      <div class="sec-nav sec-nav-compact">
+        <h2 class="sec-title">PROYECTOS</h2>
+        <div class="sec-nav-buttons">
+          <a href="#resumen" class="sec-btn sec-btn-dark" data-goto="resumen">Resumen</a>
+          <a href="#" class="sec-btn sec-btn-light" data-goto="top">Inicio</a>
+        </div>
+      </div>
+      <div class="sec-body">
+        <!-- Escritorio: carrusel infinito de 7 posiciones (se genera desde projects.js) -->
+        <div class="desktop-projects">
+          <div class="d-stage" id="dStage" tabindex="0" role="region" aria-roledescription="carrusel" aria-label="Proyectos"></div>
+          <div class="m-dots d-dots" id="dDots"></div>
+        </div>
+        <!-- Celular: carrusel infinito con peek (se genera desde projects.js) -->
+        <div class="mobile-projects">
+          <div class="mobile-stage" id="mStage" tabindex="0" role="region" aria-roledescription="carrusel" aria-label="Proyectos"></div>
+          <div class="m-dots" id="mDots"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<section id="sec-resumen" class="sec" aria-label="Resumen">
+  <nav class="sec-nav">
+    <h2 class="sec-title reveal">RESUMEN</h2>
+    <div class="sec-nav-buttons reveal">
+      <a href="#proyectos" class="sec-btn sec-btn-dark" data-goto="projects">Proyectos</a>
+      <a href="#" class="sec-btn sec-btn-light" data-goto="top">Inicio</a>
+    </div>
+  </nav>
+
+<div class="resume-grid">
+
+  <!-- ═══ EXPERIENCIA ═══ -->
+  <div>
+    <h2 class="section-header reveal">.experiencia</h2>
+
+    <div class="timeline">
+
+      <div class="timeline-item">
+        <div class="timeline-meta">
+          <span class="timeline-location">Santiago, Chile</span>
+          <span class="timeline-date">Noviembre 2025<br>– Actualidad</span>
+        </div>
+        <div class="timeline-connector">
+          <div class="timeline-dot"></div>
+          <div class="timeline-line-segment"></div>
+        </div>
+        <div class="timeline-content">
+          <p class="timeline-role">Head of brand and product</p>
+          <span class="timeline-company">Yuki Pet</span>
+          <p class="timeline-desc">Empresa de suscripción de juguetes y snacks para mascotas. Desarrollo, creación y ecosistema del producto y la marca.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-meta">
+          <span class="timeline-location">Santiago, Chile</span>
+          <span class="timeline-date">Marzo 2025<br>– Noviembre 2025</span>
+        </div>
+        <div class="timeline-connector">
+          <div class="timeline-dot"></div>
+          <div class="timeline-line-segment"></div>
+        </div>
+        <div class="timeline-content">
+          <p class="timeline-role">Diseñador Freelance</p>
+          <span class="timeline-company">Exhibición Cambridge & UAI</span>
+          <p class="timeline-desc">Diseño y fabricación de proyecto exhibido en la universidad de Cambridge: "Investing architecture in the face of south america's vastness".</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-meta">
+          <span class="timeline-location">Santiago, Chile</span>
+          <span class="timeline-date">Diciembre 2024<br>– Septiembre 2025</span>
+        </div>
+        <div class="timeline-connector">
+          <div class="timeline-dot"></div>
+          <div class="timeline-line-segment"></div>
+        </div>
+        <div class="timeline-content">
+          <p class="timeline-role">Diseñador Freelance</p>
+          <span class="timeline-company">Konatec</span>
+          <p class="timeline-desc">Rediseño de máquina de medición reológica para minería Krheo 03. Elaboración conjunta a Centro de Interfaces Emergentes (CIE).</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-meta">
+          <span class="timeline-location">Santiago, Chile</span>
+          <span class="timeline-date">Marzo 2024<br>– Enero 2025</span>
+        </div>
+        <div class="timeline-connector">
+          <div class="timeline-dot"></div>
+          <div class="timeline-line-segment"></div>
+        </div>
+        <div class="timeline-content">
+          <p class="timeline-role">Asistente de Laboratorio diseño</p>
+          <span class="timeline-company">FabLab UAI – Laboratorio de fabricación digital</span>
+          <p class="timeline-desc">Asesoramiento y mantención de máquinas: Imp. 3D, Router CNC, Cortadoras Laser, etc. Proyectos de diseño para mejoramiento de laboratorio.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-meta">
+          <span class="timeline-location">Santiago, Chile</span>
+          <span class="timeline-date">Junio 2020<br>– Marzo 2024</span>
+        </div>
+        <div class="timeline-connector">
+          <div class="timeline-dot"></div>
+          <div class="timeline-line-segment"></div>
+        </div>
+        <div class="timeline-content">
+          <p class="timeline-role">Co-Fundador</p>
+          <span class="timeline-company">Neast Components™</span>
+          <p class="timeline-desc">Empresa dedicada a crear componentes de bicicletas de montaña. Nos motiva el impulsar a todos los ciclistas a llegar a su mejor nivel.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-meta">
+          <span class="timeline-location">Santiago, Chile</span>
+          <span class="timeline-date">Abril 2022<br>– Junio 2022</span>
+        </div>
+        <div class="timeline-connector">
+          <div class="timeline-dot"></div>
+          <div class="timeline-line-segment"></div>
+        </div>
+        <div class="timeline-content">
+          <p class="timeline-role">Práctica Ingeniería en Diseño</p>
+          <span class="timeline-company">Centro de Interfaces Emergentes (CIE) & Centro de Cine y Creación (CCC)</span>
+          <p class="timeline-desc">Diseño de exhibición de arte interactivo – FondArt 2022 MUTANTE [O el inacabado desarme del cuerpo].</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ EDUCACIÓN ═══ -->
+  <div>
+    <h2 class="section-header reveal">.educación</h2>
+
+    <div class="timeline">
+
+      <div class="edu-item">
+        <div class="edu-meta">
+          <span class="edu-location">Barcelona, España</span>
+          <span class="edu-date">2026 – Actualidad</span>
+        </div>
+        <div class="timeline-connector">
+          <div class="timeline-dot"></div>
+          <div class="timeline-line-segment"></div>
+        </div>
+        <div>
+          <p class="edu-title">Máster en Diseño y Desarrollo de Productos</p>
+          <p class="edu-institution">ELISAVA, Facultad Diseño e Ingeniería UVic-UCC</p>
+        </div>
+      </div>
+
+      <div class="edu-item">
+        <div class="edu-meta">
+          <span class="edu-location">Santiago, Chile</span>
+          <span class="edu-date">2022 – 2023</span>
+        </div>
+        <div class="timeline-connector">
+          <div class="timeline-dot"></div>
+          <div class="timeline-line-segment"></div>
+        </div>
+        <div>
+          <p class="edu-title">Magíster en Innovación y Diseño – Mención de Honor</p>
+          <p class="edu-institution">Universidad Adolfo Ibáñez</p>
+        </div>
+      </div>
+
+      <div class="edu-item">
+        <div class="edu-meta">
+          <span class="edu-location">Santiago, Chile</span>
+          <span class="edu-date">2018 – 2021</span>
+        </div>
+        <div class="timeline-connector">
+          <div class="timeline-dot"></div>
+          <div class="timeline-line-segment"></div>
+        </div>
+        <div>
+          <p class="edu-title">Licenciatura en Ingeniería en Diseño</p>
+          <p class="edu-institution">Universidad Adolfo Ibáñez</p>
+        </div>
+      </div>
+
+      <div class="edu-item">
+        <div class="edu-meta">
+          <span class="edu-location">Viña del Mar, Chile</span>
+          <span class="edu-date">2016 – 2018</span>
+        </div>
+        <div class="timeline-connector">
+          <div class="timeline-dot"></div>
+          <div class="timeline-line-segment"></div>
+        </div>
+        <div>
+          <p class="edu-title">Ingeniería civil plan común</p>
+          <p class="edu-institution">Universidad Adolfo Ibáñez</p>
+        </div>
+      </div>
+
+      <div class="edu-item">
+        <div class="edu-meta">
+          <span class="edu-location">Dortmund, Alemania</span>
+          <span class="edu-date">2014</span>
+        </div>
+        <div class="timeline-connector">
+          <div class="timeline-dot"></div>
+          <div class="timeline-line-segment"></div>
+        </div>
+        <div>
+          <p class="edu-title">Intercambio escolar de verano</p>
+          <p class="edu-institution">Leibniz-gymnasium</p>
+        </div>
+      </div>
+
+      <div class="edu-item">
+        <div class="edu-meta">
+          <span class="edu-location">Puerto Varas, Chile</span>
+          <span class="edu-date">2005 – 2015</span>
+        </div>
+        <div class="timeline-connector">
+          <div class="timeline-dot"></div>
+          <div class="timeline-line-segment"></div>
+        </div>
+        <div>
+          <p class="edu-title">Enseñanza escolar</p>
+          <p class="edu-institution">Colegio Alemán de Puerto Varas</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ HABILIDADES + IDIOMAS ═══ -->
+  <div class="skills-section">
+
+    <!-- Habilidades -->
+    <div class="skills-group">
+      <h2 class="section-header reveal">.habilidades</h2>
+      <div class="skills-grid">
+        <div class="skill-item">
+          <div class="skill-icon">F</div>
+          <span class="skill-name">Fusion360</span>
+        </div>
+        <div class="skill-item">
+          <div class="skill-icon">Rh</div>
+          <span class="skill-name">Rhinoceros</span>
+        </div>
+        <div class="skill-item">
+          <div class="skill-icon">Gh</div>
+          <span class="skill-name">Grasshopper</span>
+        </div>
+        <div class="skill-item">
+          <div class="skill-icon">In</div>
+          <span class="skill-name">Inventor</span>
+        </div>
+        <div class="skill-item">
+          <div class="skill-icon">Ks</div>
+          <span class="skill-name">Keyshot</span>
+        </div>
+        <div class="skill-item">
+          <div class="skill-icon">Tw</div>
+          <span class="skill-name">Twinmotion</span>
+        </div>
+        <div class="skill-item">
+          <div class="skill-icon">En</div>
+          <span class="skill-name">Enscape</span>
+        </div>
+        <div class="skill-item">
+          <div class="skill-icon" style="background:#001e36;">
+            <span style="color:#31a8ff;font-size:13px;font-weight:800;">Ps</span>
+          </div>
+          <span class="skill-name">Photoshop</span>
+        </div>
+        <div class="skill-item">
+          <div class="skill-icon" style="background:#300;"> 
+            <span style="color:#ff9a00;font-size:13px;font-weight:800;">Ai</span>
+          </div>
+          <span class="skill-name">Illustrator</span>
+        </div>
+        <div class="skill-item">
+          <div class="skill-icon" style="background:#001a25;">
+            <span style="color:#31a8ff;font-size:13px;font-weight:800;">Lr</span>
+          </div>
+          <span class="skill-name">Lightroom</span>
+        </div>
+        <div class="skill-item">
+          <div class="skill-icon" style="background:#ff61f6; color:#fff;">
+            <span style="font-size:13px;font-weight:800;">Xd</span>
+          </div>
+          <span class="skill-name">Adobe XD</span>
+        </div>
+        <div class="skill-item">
+          <div class="skill-icon" style="background:#00005b;">
+            <span style="color:#9999ff;font-size:13px;font-weight:800;">Pr</span>
+          </div>
+          <span class="skill-name">Premiere Pro</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Idiomas -->
+    <div class="skills-group">
+      <h2 class="section-header reveal">.idiomas</h2>
+      <div class="languages-grid">
+        <div class="lang-item">
+          <div class="lang-flag">🇨🇱</div>
+          <span class="lang-name">Español</span>
+          <span class="lang-level">Nativo</span>
+        </div>
+        <div class="lang-item">
+          <div class="lang-flag">🇬🇧</div>
+          <span class="lang-name">Inglés</span>
+          <span class="lang-level">B1</span>
+        </div>
+        <div class="lang-item">
+          <div class="lang-flag">🇩🇪</div>
+          <span class="lang-name">Alemán</span>
+          <span class="lang-level">A2</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+  <footer class="site-footer site-footer-end">
+        <a href="https://www.instagram.com/cristobalogrodnik" target="_blank" rel="noopener" class="footer-link" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        </a>
+        <div class="footer-divider"></div>
+        <a href="https://www.linkedin.com/in/cristobal-ogrodnik-bert-987a30190/" target="_blank" rel="noopener" class="footer-link" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+        </a>
+        <div class="footer-divider"></div>
+        <a href="mailto:cris.ogrodnik@gmail.com?subject=Hola%20Cristóbal" class="footer-link" aria-label="Email">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </a>
+      </footer>
+</section>
+
+<button id="arrow-up" data-goto="top" aria-label="Volver al inicio">
+  <svg viewBox="0 0 18 18" fill="none"><path d="M15 12L9 6L3 12" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
 </button>
 
 <section id="hero">
@@ -303,7 +1096,7 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   </div>
   <div class="hero-bottom">
     <div class="hero-name">CRISTÓBAL<br>OGRODNIK <span>CL</span></div>
-    <div class="desliza-group" onclick="scrollToAbout()" style="cursor:pointer;">
+    <div class="desliza-group" data-goto="about" style="cursor:pointer;">
       <span class="desliza-label" id="scrollLabel">scroll</span>
       <svg viewBox="0 0 18 18" fill="none"><path d="M3 6L9 12L15 6" stroke="rgba(255,255,255,0.52)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
@@ -316,41 +1109,444 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
   <div class="bar-year">2026</div>
 </div>
 
+<script src="projects.js"></script>
 <script>
-  const hero    = document.getElementById('hero');
-  const nameBar = document.getElementById('name-bar');
-  const arrowUp = document.getElementById('arrow-up');
+/* ═══════════════════════ Utilidades compartidas ═══════════════════════ */
 
-  let currentY = 0, targetY = 0;
+/* Burbuja (link a la imagen de portada). Si la portada falta usa la 1ª imagen del proyecto; si tampoco, un recuadro con el nombre. */
+function buildPill(p, className, withOverlay) {
+  const a = document.createElement('a');
+  a.href = 'proyecto.html?p=' + encodeURIComponent(p.key);
+  a.className = className;
+  a.draggable = false;
+  if (withOverlay) a.setAttribute('data-name', p.title);
+  const img = document.createElement('img');
+  img.alt = p.title; img.draggable = false;
+  let tried = 0;
+  img.onerror = () => {
+    if (tried++ === 0 && p.slides && p.slides[0]) { img.src = p.slides[0]; return; }
+    const ph = document.createElement('div');
+    ph.className = 'pill-placeholder'; ph.textContent = p.title;
+    img.replaceWith(ph);
+  };
+  img.src = p.cover;
+  a.appendChild(img);
+  return a;
+}
+function buildLabel(p, cls) {
+  const d = document.createElement('div');
+  d.className = cls;
+  const n = document.createElement('p'); n.className = 'pill-name'; n.textContent = p.title;
+  const t = document.createElement('p'); t.className = 'pill-desc'; t.textContent = p.desc || '';
+  d.append(n, t);
+  return d;
+}
+
+/* Dots: máx. 5 visibles, la ventana se desplaza; devuelve la función que marca el activo */
+function createDots(dotsEl, N, onPick) {
+  const MAXDOTS = 5, vis = Math.min(N, MAXDOTS);
+  const track = document.createElement('div');
+  track.className = 'm-dots-track';
+  dotsEl.appendChild(track);
+  dotsEl.style.width = (vis * 16) + 'px';
+  const dots = Array.from({length: N}, (_, i) => {
+    const d = document.createElement('button');
+    d.className = 'm-dot';
+    d.setAttribute('aria-label', 'Ir al proyecto ' + (i + 1));
+    d.addEventListener('click', () => onPick(i));
+    track.appendChild(d);
+    return d;
+  });
+  return function update(active) {
+    const ws = Math.max(0, Math.min(N - vis, active - Math.floor(vis / 2)));
+    track.style.transform = 'translateX(' + (-ws * 16) + 'px)';
+    dots.forEach((d, i) => {
+      const inWin = i >= ws && i < ws + vis;
+      d.classList.toggle('active', i === active);
+      d.classList.toggle('out', !inWin);
+      /* extremo de la ventana con más proyectos más allá => punto chico */
+      d.classList.toggle('edge', inWin && i !== active &&
+        ((i === ws && ws > 0) || (i === ws + vis - 1 && ws + vis < N)));
+    });
+  };
+}
+
+/* ═══════════════════════ DESKTOP: carrusel infinito de 7 posiciones ═══════════════════════ */
+(() => {
+  const stage = document.getElementById('dStage');
+  const N = PROJECTS.length;
+
+  /* Se ven 7 posiciones (5 nítidas + 2 asomadas). Para que las etiquetas alternen arriba/abajo también en la
+     "costura" del loop, la cantidad de burbujas del anillo debe ser par y ≥ 8. Si no lo es, se repite la lista
+     (los dots siguen siendo N). */
+  let reps = Math.max(1, Math.ceil(8 / N));
+  if ((N * reps) % 2) reps++;
+  const L = N * reps;
+
+  const slides = Array.from({length: L}, (_, i) => {
+    const p = PROJECTS[i % N];
+    const side = i % 2 === 0 ? 'top' : 'bottom';
+    const el = document.createElement('div');
+    el.className = 'd-slide';
+    const top = document.createElement('div');    top.className = 'd-label top';
+    const bottom = document.createElement('div'); bottom.className = 'd-label bottom';
+    const lab = buildLabel(p, 'd-label-inner');
+    (side === 'top' ? top : bottom).append(...lab.childNodes);
+    el.append(top, buildPill(p, 'pill-card', true), bottom);
+    stage.appendChild(el);
+    return el;
+  });
+
+  let idx = 0, STEP = 220, dragging = false, moved = false, startX = 0, startT = 0;
+  const prevOff = slides.map(() => null);
+  const updateDots = createDots(document.getElementById('dDots'), N, pickItem);
+
+  function circ(i) {                       /* distancia circular de cada burbuja a la activa */
+    let o = ((i - idx) % L + L) % L;
+    if (o > L / 2) o -= L;
+    return o;
+  }
+
+  function render(frac) {
+    slides.forEach((el, i) => {
+      const off = circ(i);
+      const wrapped = prevOff[i] !== null && Math.abs(off - prevOff[i]) > L / 2;   /* da la vuelta: se reubica sin animar (invisible) */
+      prevOff[i] = off;
+      if (wrapped) el.style.transition = 'none';
+      const pos = off + frac, a = Math.abs(pos);
+      /* 5 centrales (a ≤ 2): nítidas. Extremos (a ≈ 3): asomadas, difuminadas y atenuadas. Más allá: invisibles. */
+      let opacity, blur, scale;
+      if (a <= 2)      { opacity = 1;                           blur = 0;             scale = 1; }
+      else if (a <= 3) { opacity = 1 - 0.55 * (a - 2);          blur = 3 * (a - 2);   scale = 1 - 0.05 * (a - 2); }
+      else             { opacity = Math.max(0, 0.45 * (4 - a)); blur = 3;             scale = 0.95; }
+      el.style.transform     = 'translate3d(' + (pos * STEP).toFixed(1) + 'px,0,0) scale(' + scale.toFixed(3) + ')';
+      el.style.opacity       = opacity.toFixed(3);
+      el.style.filter        = blur > 0.05 ? 'blur(' + blur.toFixed(2) + 'px)' : 'none';
+      el.style.zIndex        = String(100 - Math.round(a * 10));
+      el.style.pointerEvents = a < 3.4 ? 'auto' : 'none';
+      if (wrapped) { void el.offsetWidth; requestAnimationFrame(() => { el.style.transition = ''; }); }
+    });
+  }
+
+  function go(i) {
+    idx = ((i % L) + L) % L;
+    render(0);
+    updateDots(idx % N);
+  }
+  function pickItem(n) {                   /* desde un dot: ir por el camino más corto */
+    let diff = ((n - (idx % N)) % N + N) % N;
+    if (diff > N / 2) diff -= N;
+    go(idx + diff);
+  }
+
+  /* Tamaño: la burbuja se adapta al ancho (caben 7 posiciones) y al alto disponible:
+     título + carrusel + dots tienen que caber en una sola pantalla (el escenario está fijo). */
+  const sec = document.getElementById('sec-projects');
+  function layout() {
+    const cw = stage.clientWidth;
+    if (!cw) return;                                    /* oculto (versión celular) */
+    const vh   = window.innerHeight;
+    const head = sec.querySelector('.sec-nav').offsetHeight;
+    const dots = document.getElementById('dDots').offsetHeight + 6;
+    const avail = vh - 56 - head - dots - 8;             /* 56px = barra con el nombre */
+    const LHof = w => Math.min(122, Math.max(100, Math.round(12500 / w)));  /* alto de la zona de etiquetas (peor caso: nombre de 2 líneas + descripción de 3): crece cuando la burbuja es angosta */
+    const wMax = Math.min(cw / 7.7, 230);
+    let W = Math.max(70, wMax);
+    while (W > 70 && W / 0.44 + 2 * LHof(W) + 30 > avail) W -= 1;             /* la burbuja más grande que cabe en el alto disponible */
+    const LH = LHof(W);
+    /* Separación entre burbujas: mínimo 1.1×ancho; si sobra espacio (pantallas anchas pero bajas) se reparten hasta 1.45× */
+    STEP = Math.max(W * 1.1, Math.min(W * 1.45, (cw - W) / 6.2));
+    stage.style.setProperty('--w', W.toFixed(1) + 'px');
+    stage.style.setProperty('--lh', LH + 'px');
+    stage.classList.add('no-anim');
+    render(0);
+    requestAnimationFrame(() => requestAnimationFrame(() => stage.classList.remove('no-anim')));
+  }
+  window.addEventListener('resize', layout);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);   /* las tipografías cambian el alto del encabezado */
+
+  /* Arrastre con mouse o dedo */
+  stage.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    dragging = true; moved = false;
+    startX = e.clientX; startT = performance.now();
+    window.addEventListener('pointermove',   onMove);
+    window.addEventListener('pointerup',     onUp);
+    window.addEventListener('pointercancel', onCancel);
+  });
+  function onMove(e) {
+    const dx = e.clientX - startX;
+    if (!moved && Math.abs(dx) > 6) { moved = true; stage.classList.add('dragging'); }
+    if (moved) render(Math.max(-1, Math.min(1, dx / STEP)));
+  }
+  function endDrag() {
+    dragging = false;
+    stage.classList.remove('dragging');
+    window.removeEventListener('pointermove',   onMove);
+    window.removeEventListener('pointerup',     onUp);
+    window.removeEventListener('pointercancel', onCancel);
+    setTimeout(() => { moved = false; }, 0);          /* después del click que dispara el navegador */
+  }
+  function onUp(e) {
+    const dx = e.clientX - startX;
+    const v  = Math.abs(dx) / Math.max(1, performance.now() - startT);
+    const swiped = moved && (Math.abs(dx) > STEP * 0.22 || v > 0.35);
+    endDrag();
+    if (swiped) go(dx < 0 ? idx + 1 : idx - 1); else render(0);
+  }
+  function onCancel() { endDrag(); render(0); }
+
+  /* Click: las 5 nítidas abren el proyecto; las 2 asomadas de los extremos (peek) se centran */
+  slides.forEach((el, i) => el.addEventListener('click', e => {
+    if (moved) { e.preventDefault(); return; }
+    const off = circ(i);
+    if (Math.abs(off) >= 3) { e.preventDefault(); go(idx + off); }
+  }));
+
+  /* Teclado y trackpad (deslizar con dos dedos en horizontal) */
+  stage.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') go(idx + 1);
+    if (e.key === 'ArrowLeft')  go(idx - 1);
+  });
+  let wheelAcc = 0, wheelLock = false, wheelTimer = null;
+  stage.addEventListener('wheel', e => {
+    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;   /* scroll vertical: normal */
+    e.preventDefault();
+    if (!wheelLock) {
+      wheelAcc += e.deltaX;
+      if (Math.abs(wheelAcc) > 50) { go(idx + (wheelAcc > 0 ? 1 : -1)); wheelAcc = 0; wheelLock = true; }
+    }
+    clearTimeout(wheelTimer);                               /* un gesto = un paso (aunque haya inercia) */
+    wheelTimer = setTimeout(() => { wheelLock = false; wheelAcc = 0; }, 140);
+  }, {passive:false});
+
+
+  layout();
+  go(0);
+})();
+
+/* ═══════════════════════ MOBILE: infinito, peek, swipe + dots ═══════════════════════ */
+(() => {
+  const stage  = document.getElementById('mStage');
+  const N      = PROJECTS.length;
+  let   STEP   = 165;            /* distancia entre centros de burbujas (px); se recalcula con la burbuja */
+
+  const slides = PROJECTS.map(p => {
+    const el = document.createElement('div');
+    el.className = 'm-slide';
+    el.append(buildLabel(p, 'm-label'), buildPill(p, 'mobile-pill', false));
+    stage.appendChild(el);
+    return el;
+  });
+  const labels = slides.map(el => el.querySelector('.m-label'));
+  let idx = 0, dragging = false, moved = false, startX = 0, startT = 0;
+  const updateDots = createDots(document.getElementById('mDots'), N, i => go(i));
+
+  /* Distancia circular de cada slide al activo => carrusel infinito */
+  function circ(i) {
+    let o = ((i - idx) % N + N) % N;
+    if (o > N / 2) o -= N;
+    return o;
+  }
+
+  const prevOff = slides.map(() => null);
+  function render(frac) {
+    slides.forEach((el, i) => {
+      /* Posición real (sin recortar): cada burbuja tiene su propio lugar, así no se encima ninguna al arrastrar */
+      const off = circ(i);
+      /* Si la burbuja "da la vuelta" al otro extremo, se reubica sin animar (está invisible) */
+      const wrapped = prevOff[i] !== null && Math.abs(off - prevOff[i]) > N / 2;
+      prevOff[i] = off;
+      if (wrapped) el.style.transition = 'none';
+      const pos = off + frac;
+      const a   = Math.abs(pos);
+      const scale   = 1 - 0.16 * Math.min(a, 1.5);
+      const opacity = a <= 1 ? 1 - 0.5 * a : Math.max(0, 0.5 - 0.5 * (a - 1));
+      const blur    = Math.min(a, 1.2) * 3;
+      el.style.transform     = 'translate3d(' + (pos * STEP).toFixed(1) + 'px,0,0) scale(' + scale.toFixed(3) + ')';
+      el.style.opacity       = opacity.toFixed(3);
+      el.style.filter        = blur > 0.05 ? 'blur(' + blur.toFixed(2) + 'px)' : 'none';
+      el.style.zIndex        = String(100 - Math.round(a * 10));
+      el.style.pointerEvents = a < 1.6 ? 'auto' : 'none';
+      labels[i].style.opacity = Math.max(0, 1 - a * 2).toFixed(3);
+      if (wrapped) { void el.offsetWidth; requestAnimationFrame(() => { el.style.transition = ''; }); }
+    });
+  }
+
+  function go(i) {
+    idx = ((i % N) + N) % N;
+    render(0);
+    updateDots(idx);
+  }
+
+  /* Arrastre con el dedo (o mouse) */
+  stage.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    dragging = true; moved = false;
+    startX = e.clientX; startT = performance.now();
+    window.addEventListener('pointermove',  onMove);
+    window.addEventListener('pointerup',    onUp);
+    window.addEventListener('pointercancel', onCancel);
+  });
+  function onMove(e) {
+    const dx = e.clientX - startX;
+    if (!moved && Math.abs(dx) > 6) { moved = true; stage.classList.add('dragging'); }
+    if (moved) render(Math.max(-1, Math.min(1, dx / STEP)));
+  }
+  function endDrag() {
+    dragging = false;
+    stage.classList.remove('dragging');
+    window.removeEventListener('pointermove',  onMove);
+    window.removeEventListener('pointerup',    onUp);
+    window.removeEventListener('pointercancel', onCancel);
+    setTimeout(() => { moved = false; }, 0); /* después del click que dispara el navegador */
+  }
+  function onUp(e) {
+    const dx = e.clientX - startX;
+    const v  = Math.abs(dx) / Math.max(1, performance.now() - startT);
+    const swiped = moved && (Math.abs(dx) > 45 || v > 0.4);
+    endDrag();
+    if (swiped) go(dx < 0 ? idx + 1 : idx - 1);
+    else render(0);
+  }
+  function onCancel() { endDrag(); render(0); }   /* p.ej. el navegador tomó el gesto para scroll vertical */
+
+  /* Tocar un vecino lo centra; tocar el central abre el proyecto */
+  slides.forEach((el, i) => el.addEventListener('click', e => {
+    if (moved) { e.preventDefault(); return; }
+    if (circ(i) !== 0) { e.preventDefault(); go(i); }
+  }));
+
+  stage.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') go(idx + 1);
+    if (e.key === 'ArrowLeft')  go(idx - 1);
+  });
+
+  /* Tamaño: la burbuja se achica en pantallas bajas para que título + carrusel + dots quepan en una pantalla */
+  const sec = document.getElementById('sec-projects');
+  function layout() {
+    if (!stage.clientWidth) return;                     /* oculto (versión escritorio) */
+    const vh    = window.innerHeight;
+    const head  = sec.querySelector('.sec-nav').offsetHeight;
+    const dots  = document.getElementById('mDots').offsetHeight + 4;
+    const avail = vh - 56 - head - dots - 8;
+    const FIXED = 10 + 72 + 16 + 40;                    /* margen superior + etiqueta + separación + espacio para la sombra */
+    const mw    = Math.max(100, Math.min(180, (avail - FIXED) * 0.44));
+    STEP = mw * 165 / 180;
+    stage.style.setProperty('--mw', mw.toFixed(1) + 'px');
+    stage.style.setProperty('--mh', Math.round(mw / 0.44 + FIXED) + 'px');
+    stage.classList.add('no-anim');
+    render(0);
+    requestAnimationFrame(() => requestAnimationFrame(() => stage.classList.remove('no-anim')));
+  }
+  window.addEventListener('resize', layout);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+
+  layout();
+  go(0);
+})();
+
+/* ═══════════════════ ESCENA: portada → biografía → proyectos → resumen ═══════════════════ */
+(() => {
+  const hero     = document.getElementById('hero');
+  const nameBar  = document.getElementById('name-bar');
+  const arrowUp  = document.getElementById('arrow-up');
+  const about    = document.getElementById('about');
+  const proj     = document.getElementById('sec-projects');
+  const resumen  = document.getElementById('sec-resumen');
+
+  /* Etapas del scroll, en alturas de pantalla (los mismos números definen el largo de #scene en el CSS: 355vh) */
+  const K   = { HERO: 1, HOLD1: 0.35, SCALE: 0.9, HOLD2: 0.3 };
+  const BAR = 56;                 /* alto de la barra con el nombre */
   const EASE = 0.10;
+  const lerp  = (a, b, t) => a + (b - a) * t;
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
-  function lerp(a, b, t) { return a + (b - a) * t; }
+  let smoothY = window.scrollY, lastP = -1, heroHidden = null;
 
-  function scrollToAbout() {
-    window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
+  /* A dónde lleva cada atajo / botón */
+  function targets() {
+    const vh = window.innerHeight;
+    return {
+      top:      0,
+      about:    vh,                                                    /* biografía (portada ya arriba) */
+      projects: (K.HERO + K.HOLD1 + K.SCALE + K.HOLD2 / 2) * vh,     /* proyectos ya completos */
+      resumen:  resumen.offsetTop - BAR
+    };
+  }
+  function goTo(name, instant) {
+    const y = targets()[name];
+    if (y === undefined) return;
+    if (instant) { window.scrollTo(0, y); smoothY = y; }
+    else window.scrollTo({ top: y, behavior: 'smooth' });
+  }
+  document.addEventListener('click', e => {
+    const a = e.target.closest('[data-goto]');
+    if (!a) return;
+    e.preventDefault();
+    goTo(a.dataset.goto);
+  });
+
+  /* Los proyectos aparecen y crecen; la biografía se desvanece */
+  function applyProjects(p) {
+    const e = p * p * (3 - 2 * p);                                  /* suavizado */
+    proj.style.visibility    = p <= 0 ? 'hidden' : 'visible';
+    proj.style.opacity       = clamp((p - 0.12) / 0.5, 0, 1).toFixed(3);
+    proj.style.transform     = p >= 1 ? 'none' : 'translateY(' + ((1 - e) * 7).toFixed(2) + 'vh) scale(' + (0.55 + 0.45 * e).toFixed(4) + ')';
+    proj.style.pointerEvents = p >= 0.9 ? 'auto' : 'none';
+    about.style.opacity       = clamp(1 - p / 0.42, 0, 1).toFixed(3);
+    about.style.transform     = p <= 0 ? 'none' : 'translateY(' + (-e * 4).toFixed(2) + 'vh) scale(' + (1 - 0.05 * e).toFixed(4) + ')';
+    about.style.visibility    = p >= 0.45 ? 'hidden' : 'visible';
+    about.style.pointerEvents = p <= 0.05 ? 'auto' : 'none';
   }
 
   function tick() {
-    const vh      = window.innerHeight;
-    const scrollY = window.scrollY;
-    const maxScroll = document.body.scrollHeight - vh;
+    const vh = window.innerHeight;
+    const y  = Math.max(0, window.scrollY);
+    const resumenTop = resumen.offsetTop;                           /* lecturas primero, escrituras después */
 
-    // Hero slides up exactly 1×vh then stops
-    targetY  = Math.min(scrollY, vh);
-    currentY = lerp(currentY, targetY, EASE);
-    hero.style.transform = 'translateY(-' + currentY.toFixed(2) + 'px)';
+    smoothY = Math.abs(y - smoothY) < 0.3 ? y : lerp(smoothY, y, EASE);
 
-    nameBar.classList.toggle('show', currentY >= vh - 2);
+    /* 1) La portada sube una altura de pantalla */
+    const heroY = Math.min(smoothY, vh);
+    hero.style.transform = 'translateY(-' + heroY.toFixed(2) + 'px)';
+    const gone = heroY >= vh - 0.5;
+    if (gone !== heroHidden) { hero.style.visibility = gone ? 'hidden' : 'visible'; heroHidden = gone; }
+    nameBar.classList.toggle('show', heroY >= vh - 2);
 
-    // Arrow-up appears when fully scrolled down AND hero is gone
-    const atBottom = scrollY >= maxScroll - 20;
-    arrowUp.classList.toggle('show', atBottom && currentY >= vh - 2);
+    /* 2) Los proyectos aparecen y escalan */
+    const a = (K.HERO + K.HOLD1) * vh, b = a + K.SCALE * vh;
+    const p = clamp((smoothY - a) / (b - a), 0, 1);
+    if (Math.abs(p - lastP) > 0.0004 || p === 0 || p === 1) { if (p !== lastP) applyProjects(p); lastP = p; }
+
+    /* 3) Botón "volver al inicio": aparece cuando entra el resumen */
+    arrowUp.classList.toggle('show', y > resumenTop - vh * 0.6);
 
     requestAnimationFrame(tick);
   }
-  requestAnimationFrame(tick);
-</script>
 
+  /* Enlaces directos: index.html#proyectos y index.html#resumen (p. ej. el botón "Cerrar" del visor) */
+  const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+  const reloaded = nav && (nav.type === 'reload' || nav.type === 'back_forward');
+  if (!reloaded) {
+    if (location.hash === '#proyectos') goTo('projects', true);
+    else if (location.hash === '#resumen') goTo('resumen', true);
+  }
+  window.addEventListener('hashchange', () => {
+    if (location.hash === '#proyectos') goTo('projects');
+    else if (location.hash === '#resumen') goTo('resumen');
+  });
+
+  requestAnimationFrame(tick);
+
+  /* Aparición escalonada de las líneas de tiempo del resumen */
+  const allReveal = document.querySelectorAll('.reveal, .timeline-item, .edu-item');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach((entry, i) => { if (entry.isIntersecting) setTimeout(() => entry.target.classList.add('visible'), i * 40); });
+  }, { threshold: 0.05 });
+  allReveal.forEach(el => obs.observe(el));
+})();
+</script>
 
 </body>
 </html>
