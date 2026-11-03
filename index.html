@@ -32,9 +32,10 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
    portada → biografía → proyectos (aparecen y crecen) → resumen
    El escenario queda fijo (sticky) mientras dura la animación y luego se va con el scroll.
    Largo de la escena (en alturas de pantalla) = 1 portada + 0.35 pausa + 0.9 aparición + 0.3 pausa + 1 salida
-   (los mismos números están en el JS: constante K).
+   (los mismos números están en el JS: constante K), más --bio-extra: el scroll extra que necesita leerse
+   la biografía cuando es más alta que la pantalla (el texto sube con el mismo scroll de la página).
 ═══════════════════════════════════════ */
-#scene { position: relative; height: 355vh; height: 355dvh; }
+#scene { position: relative; height: calc(355vh + var(--bio-extra, 0px)); height: calc(355dvh + var(--bio-extra, 0px)); }
 #stage { position: sticky; top: 0; height: 100vh; height: 100dvh; overflow: hidden; background: #fff; }
 
 /* ═══════════════════════════════════════
@@ -45,10 +46,9 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
   inset: 0;
   background: #ffffff;
   z-index: 1;
-  overflow-x: hidden;
-  overflow-y: auto;          /* si el contenido no cabe (pantallas bajas), se puede desplazar */
-  scrollbar-width: thin;
+  overflow: hidden;          /* sin scroll propio: si el texto no cabe, sube con el scroll de la página (ver JS) */
 }
+#about .about-inner { will-change: transform; }
 
 
 
@@ -56,7 +56,7 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
 /* Flex layout: text left | photo right, centred vertically */
 .about-inner {
   position: relative;
-  min-height: 100%;          /* centrado vertical cuando cabe; si no, crece y #about hace scroll */
+  min-height: 100%;          /* centrado vertical cuando cabe; si no, crece (y el JS lo desplaza con el scroll) */
   width: 100%;
   max-width: 1300px;
   margin: 0 auto;
@@ -291,7 +291,7 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
 
 /* ─── PROYECTOS: ocupa todo el escenario, aparece y crece con el scroll ─── */
 #sec-projects {
-  position:absolute; inset:0; z-index:2; background:#fff;
+  position:absolute; inset:0; z-index:2;      /* sin fondo: el blanco lo pone el escenario; un fondo aquí se veía como un rectángulo al escalar */
   display:flex; flex-direction:column; padding-top:56px;        /* 56px: despeja la barra con el nombre */
   opacity:0; visibility:hidden; pointer-events:none;
   transform-origin:50% 50%; will-change: transform, opacity;
@@ -1463,6 +1463,8 @@ function createDots(dotsEl, N, onPick) {
   const proj     = document.getElementById('sec-projects');
   const resumen  = document.getElementById('sec-resumen');
   const cue      = document.getElementById('bio-cue');
+  const scene    = document.getElementById('scene');
+  const aboutInner = about.querySelector('.about-inner');
 
   /* Etapas del scroll, en alturas de pantalla (los mismos números definen el largo de #scene en el CSS: 355vh) */
   const K   = { HERO: 1, HOLD1: 0.35, SCALE: 0.9, HOLD2: 0.3 };
@@ -1471,7 +1473,18 @@ function createDots(dotsEl, N, onPick) {
   const lerp  = (a, b, t) => a + (b - a) * t;
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
-  let smoothY = window.scrollY, lastP = -1, heroHidden = null;
+  let smoothY = window.scrollY, lastP = -1, heroHidden = null, lastRead = -1;
+
+  /* E = scroll extra para leer la biografía cuando no cabe en la pantalla (celulares, ventanas bajas).
+     El texto sube con el scroll de la página, así hay un solo scroll y nunca se pasa de largo. */
+  let E = 0;
+  function measure() {
+    E = Math.max(0, Math.round(aboutInner.offsetHeight - about.clientHeight));
+    scene.style.setProperty('--bio-extra', E + 'px');
+  }
+  measure();
+  window.addEventListener('resize', measure);
+  window.addEventListener('load', measure);
 
   /* A dónde lleva cada atajo / botón */
   function targets() {
@@ -1479,7 +1492,7 @@ function createDots(dotsEl, N, onPick) {
     return {
       top:      0,
       about:    vh,                                                    /* biografía (portada ya arriba) */
-      projects: (K.HERO + K.HOLD1 + K.SCALE + K.HOLD2 / 2) * vh,     /* proyectos ya completos */
+      projects: (K.HERO + K.HOLD1 + K.SCALE + K.HOLD2 / 2) * vh + E,  /* proyectos ya completos */
       resumen:  resumen.offsetTop - BAR
     };
   }
@@ -1500,12 +1513,12 @@ function createDots(dotsEl, N, onPick) {
   function applyProjects(p) {
     const e = p * p * (3 - 2 * p);                                  /* suavizado */
     proj.style.visibility    = p <= 0 ? 'hidden' : 'visible';
-    proj.style.opacity       = clamp((p - 0.12) / 0.5, 0, 1).toFixed(3);
+    proj.style.opacity       = clamp((p - 0.22) / 0.4, 0, 1).toFixed(3);
     proj.style.transform     = p >= 1 ? 'none' : 'translateY(' + ((1 - e) * 7).toFixed(2) + 'vh) scale(' + (0.55 + 0.45 * e).toFixed(4) + ')';
     proj.style.pointerEvents = p >= 0.9 ? 'auto' : 'none';
-    about.style.opacity       = clamp(1 - p / 0.42, 0, 1).toFixed(3);
+    about.style.opacity       = clamp(1 - p / 0.3, 0, 1).toFixed(3);
     about.style.transform     = p <= 0 ? 'none' : 'translateY(' + (-e * 4).toFixed(2) + 'vh) scale(' + (1 - 0.05 * e).toFixed(4) + ')';
-    about.style.visibility    = p >= 0.45 ? 'hidden' : 'visible';
+    about.style.visibility    = p >= 0.32 ? 'hidden' : 'visible';
     about.style.pointerEvents = p <= 0.05 ? 'auto' : 'none';
   }
 
@@ -1523,8 +1536,12 @@ function createDots(dotsEl, N, onPick) {
     if (gone !== heroHidden) { hero.style.visibility = gone ? 'hidden' : 'visible'; heroHidden = gone; }
     nameBar.classList.toggle('show', heroY >= vh - 2);
 
-    /* 2) Los proyectos aparecen y escalan */
-    const a = (K.HERO + K.HOLD1) * vh, b = a + K.SCALE * vh;
+    /* 1b) El texto de la biografía sube con el scroll cuando no cabe en la pantalla */
+    const read = clamp(smoothY - vh, 0, E);
+    if (Math.abs(read - lastRead) > 0.1) { aboutInner.style.transform = read > 0 ? 'translate3d(0,' + (-read).toFixed(1) + 'px,0)' : 'none'; lastRead = read; }
+
+    /* 2) Los proyectos aparecen y escalan (después de la portada, la lectura de la biografía y una pausa) */
+    const a = (K.HERO + K.HOLD1) * vh + E, b = a + K.SCALE * vh;
     const p = clamp((smoothY - a) / (b - a), 0, 1);
     if (Math.abs(p - lastP) > 0.0004 || p === 0 || p === 1) { if (p !== lastP) applyProjects(p); lastP = p; }
 
@@ -1542,10 +1559,16 @@ function createDots(dotsEl, N, onPick) {
   /* Enlaces directos: index.html#proyectos y index.html#resumen (p. ej. el botón "Cerrar" del visor) */
   const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
   const reloaded = nav && (nav.type === 'reload' || nav.type === 'back_forward');
+  let jumped = null, jumpY = 0;
   if (!reloaded) {
-    if (location.hash === '#proyectos') goTo('projects', true);
-    else if (location.hash === '#resumen') goTo('resumen', true);
+    if (location.hash === '#proyectos') { goTo('projects', true); jumped = 'projects'; }
+    else if (location.hash === '#resumen') { goTo('resumen', true); jumped = 'resumen'; }
+    jumpY = window.scrollY;
   }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => {
+    measure();                                    /* el largo de la biografía cambia al cargar las tipografías */
+    if (jumped && Math.abs(window.scrollY - jumpY) < 3) goTo(jumped, true);   /* y, si venimos de un enlace directo, se reubica */
+  });
   window.addEventListener('hashchange', () => {
     if (location.hash === '#proyectos') goTo('projects');
     else if (location.hash === '#resumen') goTo('resumen');
