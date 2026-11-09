@@ -31,11 +31,11 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
    ESCENA — un solo recorrido con el scroll:
    portada → biografía → proyectos (aparecen y crecen) → resumen
    El escenario queda fijo (sticky) mientras dura la animación y luego se va con el scroll.
-   Largo de la escena (en alturas de pantalla) = 1 portada + 0.2 pausa + 1 cambio de pantalla + 0.8 crecimiento + 0.3 pausa + 1 salida
+   Largo de la escena (en alturas de pantalla) = 1 portada + 0.2 pausa + 1.3 cambio de pantalla con crecimiento + 0.3 pausa + 1 salida
    (los mismos números están en el JS: constante K; el JS escribe --scene-vh), más --bio-extra: el scroll extra que necesita leerse
    la biografía cuando es más alta que la pantalla (el texto sube con el mismo scroll de la página).
 ═══════════════════════════════════════ */
-#scene { position: relative; height: calc(var(--scene-vh, 4.3) * 100vh + var(--bio-extra, 0px)); height: calc(var(--scene-vh, 4.3) * 100dvh + var(--bio-extra, 0px)); }
+#scene { position: relative; height: calc(var(--scene-vh, 3.8) * 100vh + var(--bio-extra, 0px)); height: calc(var(--scene-vh, 3.8) * 100dvh + var(--bio-extra, 0px)); }
 #stage { position: sticky; top: 0; height: 100vh; height: 100dvh; overflow: hidden; background: #fff; }
 
 /* ═══════════════════════════════════════
@@ -1474,14 +1474,18 @@ function createDots(dotsEl, N, onPick) {
   const aboutInner = about.querySelector('.about-inner');
 
   /* Etapas del scroll, en alturas de pantalla (los mismos números definen el largo de #scene en el CSS: 355vh) */
-  const K   = { HERO: 1, HOLD1: 0.2, TRANS: 1, GROW: 0.8, HOLD2: 0.3 };   /* 1 portada · pausa · cambio de pantalla (1:1 con el scroll) · crecimiento del punto · pausa */
+  /* HERO: portada · HOLD1: pausa · TRANS: cambio de pantalla (1:1 con el scroll) · GROW: crecimiento del punto ·
+     GROW_AT: en qué punto del cambio de pantalla se asoma el punto y EMPIEZA a crecer (0.5 = apenas su centro cruza el borde
+     inferior), así el crecimiento es continuo con la subida · HOLD2: pausa final */
+  const K   = { HERO: 1, HOLD1: 0.2, TRANS: 1, GROW: 0.8, GROW_AT: 0.5, HOLD2: 0.3 };
+  const PIN = K.HERO + K.HOLD1 + Math.max(K.TRANS, K.GROW_AT * K.TRANS + K.GROW) + K.HOLD2;   /* alturas de pantalla que el escenario queda fijo */
   const BAR = 56;                 /* alto de la barra con el nombre */
   const EASE = 0.10;
   const lerp  = (a, b, t) => a + (b - a) * t;
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
   let smoothY = window.scrollY, lastKey = '', heroHidden = null, lastRead = -1;
-  scene.style.setProperty('--scene-vh', String(K.HERO + K.HOLD1 + K.TRANS + K.GROW + K.HOLD2 + 1));   /* largo de la escena, en alturas de pantalla */
+  scene.style.setProperty('--scene-vh', String(PIN + 1));   /* largo de la escena, en alturas de pantalla (+1 de salida) */
 
   /* E = scroll extra para leer la biografía cuando no cabe en la pantalla (celulares, ventanas bajas).
      El texto sube con el scroll de la página, así hay un solo scroll y nunca se pasa de largo. */
@@ -1500,7 +1504,7 @@ function createDots(dotsEl, N, onPick) {
     return {
       top:      0,
       about:    vh,                                                    /* biografía (portada ya arriba) */
-      projects: (K.HERO + K.HOLD1 + K.TRANS + K.GROW + K.HOLD2 / 2) * vh + E,  /* proyectos ya completos */
+      projects: (K.HERO + K.HOLD1 + Math.max(K.TRANS, K.GROW_AT * K.TRANS + K.GROW) + K.HOLD2 / 2) * vh + E,  /* proyectos ya completos */
       resumen:  resumen.offsetTop - BAR
     };
   }
@@ -1551,7 +1555,7 @@ function createDots(dotsEl, N, onPick) {
     /* 2) Cambio de pantalla y crecimiento del punto (después de la portada, la lectura de la biografía y una pausa) */
     const t0 = (K.HERO + K.HOLD1) * vh + E;
     const t  = clamp((smoothY - t0) / (K.TRANS * vh), 0, 1);                    /* biografía sale / proyectos entran */
-    const g  = clamp((smoothY - t0 - K.TRANS * vh) / (K.GROW * vh), 0, 1);      /* el punto crece */
+    const g  = clamp((smoothY - t0 - K.GROW_AT * K.TRANS * vh) / (K.GROW * vh), 0, 1);   /* el punto crece: empieza apenas se asoma y sigue mientras sube */
     const key = t.toFixed(4) + ',' + g.toFixed(4) + ',' + vh;
     if (key !== lastKey) { applyScene(t, g, vh); lastKey = key; }
 
