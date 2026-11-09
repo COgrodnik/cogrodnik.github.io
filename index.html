@@ -284,7 +284,16 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
 .proj-content {
   display:flex; flex-direction:column; height:100%; padding-top:56px;   /* 56px: despeja la barra con el nombre */
   transform-origin:50% 50%; will-change: transform;
-  transform: scale(0.02);     /* nace como un punto; el JS lo hace crecer con el scroll */
+  transform: scale(0.02);     /* nace como un punto y crece con el scroll */
+}
+/* Navegadores con animaciones guiadas por scroll (Chrome, Edge, Safari 26+): el crecimiento lo anima el hilo del compositor,
+   en sincronía exacta con el scroll y sin JavaScript por fotograma. La duración (1s) no importa: manda el scroll.
+   La curva (1/3,0,2/3,1) equivale a un 'smoothstep'. --g0/--g1 (en px) los escribe el JS al medir. */
+@keyframes dotGrow { from { transform: scale(0.02); } to { transform: scale(1); } }
+.dot-native .proj-content {
+  animation: dotGrow 1s cubic-bezier(0.3333, 0, 0.6667, 1) both;
+  animation-timeline: scroll(root block);
+  animation-range: var(--g0, 0px) var(--g1, 1px);
 }
 .sec-nav-compact { padding:6px 8% 0; align-items:center; flex-wrap:nowrap; gap:16px; }
 .sec-nav-compact .sec-title { font-size: clamp(26px, min(3.6vw, 6vh), 52px); }
@@ -612,8 +621,7 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
 .d-slide {
   position:absolute; top:0; left:50%; width:var(--w); margin-left:calc(var(--w) / -2);
   display:grid; grid-template-rows:var(--lh) auto var(--lh);
-  transition:transform .55s cubic-bezier(.22,.8,.3,1), opacity .55s ease, filter .55s ease;
-  will-change:transform, opacity, filter;
+  will-change:transform, opacity;     /* se mueven por JS cada fotograma (motor de física): sin transiciones CSS */
 }
 .d-label { padding:0 6px; }
 .d-label.top    { align-self:end;   padding-bottom:14px; }   /* etiquetas arriba o abajo, alternadas */
@@ -662,10 +670,9 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
 .m-slide {
   position:absolute; top:10px; left:50%; width:280px; margin-left:-140px;
   display:flex; flex-direction:column; align-items:center;
-  transition: transform .5s cubic-bezier(.22,.8,.3,1), opacity .5s ease, filter .5s ease;
-  will-change: transform, opacity, filter;
+  will-change: transform, opacity;    /* se mueven por JS cada fotograma (motor de física): sin transiciones CSS */
 }
-.m-label { width:100%; height:72px; padding:0 10px; margin-bottom:16px; text-align:center; transition:opacity .3s ease; }
+.m-label { width:100%; height:72px; padding:0 10px; margin-bottom:16px; text-align:center; }
 .m-label .pill-name { font-size:14px; margin-bottom:4px; }
 .m-label .pill-desc { font-size:11px; }
 
@@ -1111,6 +1118,127 @@ const onViewportChange = cb => viewportListeners.push(cb);
   if ('ResizeObserver' in window) new ResizeObserver(fire).observe(vhProbe);                    /* cambia solo si cambia el svh */
 })();
 
+/* ═══════════════════════ Motor de los carruseles (física) ═══════════════════════
+   Una sola posición continua (en "proyectos", con decimales) que:
+   · sigue al dedo/mouse exactamente mientras arrastras (también más allá de un proyecto)
+   · al soltar conserva la velocidad: un impulso fuerte recorre varios proyectos y se detiene suave en uno
+   · se asienta con un resorte críticamente amortiguado (sin rebote)
+   · si tocas de nuevo en pleno movimiento, toma desde donde está: no hay saltos ni cortes entre una animación y otra
+   Cada fotograma solo actualiza transform/opacity de las burbujas visibles (sin transiciones CSS que se interrumpan). */
+function createRing(o) {
+  const { stage, slides, L, N } = o;
+  const labels = o.labels || null;
+  const W_SPRING = 13;                                  /* rigidez del resorte (rad/s): ~0.4 s en asentarse */
+  let pos = 0, vel = 0, target = 0, anim = false, lastT = 0, raf = 0;
+  let dragging = false, moved = false, startX = 0, startPos = 0, samples = [], lastActive = -1, wheelTimer = 0;
+  const cache = slides.map(() => ({ hidden: false, blur: -1 }));
+  const mod = (a, n) => ((a % n) + n) % n;
+  const offsetOf = i => { let d = mod(i - pos, L); if (d > L / 2) d -= L; return d; };      /* distancia circular al centro (con decimales) */
+
+  function render() {
+    for (let i = 0; i < L; i++) {
+      const el = slides[i], c = cache[i], st = o.style(offsetOf(i));
+      if (!st) { if (!c.hidden) { el.style.opacity = '0'; el.style.pointerEvents = 'none'; c.hidden = true; } continue; }
+      c.hidden = false;
+      el.style.transform = 'translate3d(' + st.x.toFixed(1) + 'px,0,0) scale(' + st.s.toFixed(3) + ')';
+      el.style.opacity = st.op.toFixed(3);
+      el.style.zIndex = st.z;
+      el.style.pointerEvents = st.pe ? 'auto' : 'none';
+      if (st.blur !== c.blur) { el.style.filter = st.blur > 0 ? 'blur(' + st.blur + 'px)' : 'none'; c.blur = st.blur; }   /* en pasos de 0.5px: casi no repinta */
+      if (labels && st.lab !== undefined) labels[i].style.opacity = st.lab.toFixed(2);
+    }
+    const act = mod(Math.round(pos), L) % N;
+    if (act !== lastActive) { lastActive = act; o.onActive(act); }
+  }
+
+  function stopAnim() { anim = false; cancelAnimationFrame(raf); vel = 0; }
+  function startAnim() { if (anim) return; anim = true; lastT = performance.now(); raf = requestAnimationFrame(step); }
+  function step(t) {
+    if (!anim) return;
+    const dt = Math.min(0.033, (t - lastT) / 1000); lastT = t;
+    vel += (W_SPRING * W_SPRING * (target - pos) - 2 * W_SPRING * vel) * dt;
+    pos += vel * dt;
+    if (Math.abs(target - pos) < 0.0008 && Math.abs(vel) < 0.02) {
+      pos = target; vel = 0; anim = false;
+      const k = Math.floor(pos / L) * L; pos -= k; target -= k;          /* evita que los números crezcan indefinidamente */
+      render(); return;
+    }
+    render(); raf = requestAnimationFrame(step);
+  }
+  const setTarget = t => { target = t; startAnim(); };
+  const rest = () => Math.round(anim ? target : pos);                     /* a qué proyecto va (o está) */
+  function go(n) {                                                        /* ir al proyecto n (0..N-1) por el camino más corto */
+    let diff = mod(n - mod(rest(), N), N); if (diff > N / 2) diff -= N;
+    setTarget(rest() + diff);
+  }
+  const goBy = k => setTarget(rest() + k);
+
+  /* Arrastre con el dedo o el mouse */
+  function releaseVelocity(t) {                                           /* proyectos/s según los últimos 100 ms */
+    const s = samples.filter(p => t - p.t <= 100);
+    if (s.length < 2) return 0;
+    const a = s[0], b = s[s.length - 1], dt = b.t - a.t;
+    if (dt <= 0 || t - b.t > 80) return 0;                                /* se quedó quieto antes de soltar: sin impulso */
+    return -((b.x - a.x) / dt) * 1000 / o.step();
+  }
+  stage.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    stopAnim(); dragging = true; moved = false;
+    startX = e.clientX; startPos = pos; samples = [{ t: e.timeStamp, x: e.clientX }];
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
+  });
+  function onMove(e) {
+    const dx = e.clientX - startX;
+    if (!moved && Math.abs(dx) > 4) { moved = true; stage.classList.add('dragging'); }
+    if (!moved) return;
+    samples.push({ t: e.timeStamp, x: e.clientX });
+    while (samples.length > 2 && e.timeStamp - samples[0].t > 120) samples.shift();
+    pos = startPos - dx / o.step();                                       /* el contenido sigue al dedo 1:1, sin límite de un proyecto */
+    render();
+  }
+  function endDrag() {
+    dragging = false; stage.classList.remove('dragging');
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+    window.removeEventListener('pointercancel', onCancel);
+    setTimeout(() => { moved = false; }, 0);                              /* después del 'click' que dispara el navegador */
+  }
+  function onUp(e) {
+    const wasMoved = moved, v = Math.max(-14, Math.min(14, releaseVelocity(e.timeStamp)));
+    endDrag();
+    if (!wasMoved) return;
+    const base = Math.round(startPos);
+    let t = Math.round(pos + Math.max(-5, Math.min(5, v * 0.08)));        /* el impulso decide cuántos proyectos más recorre */
+    if (t === base && Math.abs(pos - startPos) > 0.18) t = base + Math.sign(pos - startPos);   /* arrastre intencional: al menos uno */
+    vel = v; setTarget(t);
+  }
+  function onCancel() { endDrag(); setTarget(Math.round(pos)); }          /* p. ej. el navegador tomó el gesto para scroll vertical */
+
+  /* Clic: las burbujas de los extremos (peek) se centran; las demás abren el proyecto */
+  slides.forEach((el, i) => el.addEventListener('click', e => {
+    if (moved) { e.preventDefault(); return; }
+    const d = Math.round(offsetOf(i));
+    if (Math.abs(d) >= o.peek) { e.preventDefault(); goBy(d); }
+  }));
+
+  stage.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') goBy(1);
+    if (e.key === 'ArrowLeft')  goBy(-1);
+  });
+  /* Trackpad (deslizar con dos dedos en horizontal): sigue continuo y se asienta al terminar */
+  if (o.wheel) stage.addEventListener('wheel', e => {
+    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;                 /* scroll vertical: normal */
+    e.preventDefault();
+    stopAnim(); pos += e.deltaX / (o.step() * 1.15); render();
+    clearTimeout(wheelTimer);
+    wheelTimer = setTimeout(() => { setTarget(Math.round(pos)); }, 110);
+  }, { passive: false });
+
+  return { render, go, goBy, offsetOf, moved: () => moved };
+}
+
 /* ═══════════════════════ Utilidades compartidas ═══════════════════════ */
 
 /* Burbuja (link a la imagen de portada). Si la portada falta usa la 1ª imagen del proyecto; si tampoco, un recuadro con el nombre. */
@@ -1197,50 +1325,23 @@ function createDots(dotsEl, N, onPick) {
     return el;
   });
 
-  let idx = 0, STEP = 220, dragging = false, moved = false, startX = 0, startT = 0;
-  const prevOff = slides.map(() => null);
-  const updateDots = createDots(document.getElementById('dDots'), N, pickItem);
+  let STEP = 220;
+  const updateDots = createDots(document.getElementById('dDots'), N, n => ring.go(n));
+  const ring = createRing({
+    stage, slides, L, N, wheel: true, peek: 3,                     /* las 2 de los extremos (a 3 posiciones) se centran al tocarlas */
+    step: () => STEP,
+    onActive: n => updateDots(n),
+    style(d) {
+      const a = Math.abs(d);
+      if (a > 4) return null;                                      /* fuera de las 7 posiciones: invisible */
+      let op, sc;
+      if (a <= 2)      { op = 1;                       sc = 1; }                    /* 5 centrales: nítidas */
+      else if (a <= 3) { op = 1 - 0.55 * (a - 2);      sc = 1 - 0.05 * (a - 2); }   /* extremos (peek): difuminadas y atenuadas */
+      else             { op = 0.45 * (4 - a);          sc = 0.95; }
+      return { x: d * STEP, s: sc, op, z: 100 - Math.round(a * 10), pe: a < 3.4, blur: Math.round(Math.min(Math.max(a - 2, 0), 1) * 6) / 2 };
+    }
+  });
 
-  function circ(i) {                       /* distancia circular de cada burbuja a la activa */
-    let o = ((i - idx) % L + L) % L;
-    if (o > L / 2) o -= L;
-    return o;
-  }
-
-  function render(frac) {
-    slides.forEach((el, i) => {
-      const off = circ(i);
-      const wrapped = prevOff[i] !== null && Math.abs(off - prevOff[i]) > L / 2;   /* da la vuelta: se reubica sin animar (invisible) */
-      prevOff[i] = off;
-      if (wrapped) el.style.transition = 'none';
-      const pos = off + frac, a = Math.abs(pos);
-      /* 5 centrales (a ≤ 2): nítidas. Extremos (a ≈ 3): asomadas, difuminadas y atenuadas. Más allá: invisibles. */
-      let opacity, blur, scale;
-      if (a <= 2)      { opacity = 1;                           blur = 0;             scale = 1; }
-      else if (a <= 3) { opacity = 1 - 0.55 * (a - 2);          blur = 3 * (a - 2);   scale = 1 - 0.05 * (a - 2); }
-      else             { opacity = Math.max(0, 0.45 * (4 - a)); blur = 3;             scale = 0.95; }
-      el.style.transform     = 'translate3d(' + (pos * STEP).toFixed(1) + 'px,0,0) scale(' + scale.toFixed(3) + ')';
-      el.style.opacity       = opacity.toFixed(3);
-      el.style.filter        = blur > 0.05 ? 'blur(' + blur.toFixed(2) + 'px)' : 'none';
-      el.style.zIndex        = String(100 - Math.round(a * 10));
-      el.style.pointerEvents = a < 3.4 ? 'auto' : 'none';
-      if (wrapped) { void el.offsetWidth; requestAnimationFrame(() => { el.style.transition = ''; }); }
-    });
-  }
-
-  function go(i) {
-    idx = ((i % L) + L) % L;
-    render(0);
-    updateDots(idx % N);
-  }
-  function pickItem(n) {                   /* desde un dot: ir por el camino más corto */
-    let diff = ((n - (idx % N)) % N + N) % N;
-    if (diff > N / 2) diff -= N;
-    go(idx + diff);
-  }
-
-  /* Tamaño: la burbuja se adapta al ancho (caben 7 posiciones) y al alto disponible:
-     título + carrusel + dots tienen que caber en una sola pantalla (el escenario está fijo). */
   const sec = document.getElementById('sec-projects');
   let lastLayoutKey = '';
   function layout() {
@@ -1262,71 +1363,13 @@ function createDots(dotsEl, N, onPick) {
     STEP = Math.max(W * 1.1, Math.min(W * 1.45, (cw - W) / 6.2));
     stage.style.setProperty('--w', W.toFixed(1) + 'px');
     stage.style.setProperty('--lh', LH + 'px');
-    stage.classList.add('no-anim');
-    render(0);
-    requestAnimationFrame(() => requestAnimationFrame(() => stage.classList.remove('no-anim')));
+    ring.render();
   }
   onViewportChange(layout);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);   /* las tipografías cambian el alto del encabezado */
-
-  /* Arrastre con mouse o dedo */
-  stage.addEventListener('pointerdown', e => {
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
-    dragging = true; moved = false;
-    startX = e.clientX; startT = performance.now();
-    window.addEventListener('pointermove',   onMove);
-    window.addEventListener('pointerup',     onUp);
-    window.addEventListener('pointercancel', onCancel);
-  });
-  function onMove(e) {
-    const dx = e.clientX - startX;
-    if (!moved && Math.abs(dx) > 6) { moved = true; stage.classList.add('dragging'); }
-    if (moved) render(Math.max(-1, Math.min(1, dx / STEP)));
-  }
-  function endDrag() {
-    dragging = false;
-    stage.classList.remove('dragging');
-    window.removeEventListener('pointermove',   onMove);
-    window.removeEventListener('pointerup',     onUp);
-    window.removeEventListener('pointercancel', onCancel);
-    setTimeout(() => { moved = false; }, 0);          /* después del click que dispara el navegador */
-  }
-  function onUp(e) {
-    const dx = e.clientX - startX;
-    const v  = Math.abs(dx) / Math.max(1, performance.now() - startT);
-    const swiped = moved && (Math.abs(dx) > STEP * 0.22 || v > 0.35);
-    endDrag();
-    if (swiped) go(dx < 0 ? idx + 1 : idx - 1); else render(0);
-  }
-  function onCancel() { endDrag(); render(0); }
-
-  /* Click: las 5 nítidas abren el proyecto; las 2 asomadas de los extremos (peek) se centran */
-  slides.forEach((el, i) => el.addEventListener('click', e => {
-    if (moved) { e.preventDefault(); return; }
-    const off = circ(i);
-    if (Math.abs(off) >= 3) { e.preventDefault(); go(idx + off); }
-  }));
-
-  /* Teclado y trackpad (deslizar con dos dedos en horizontal) */
-  stage.addEventListener('keydown', e => {
-    if (e.key === 'ArrowRight') go(idx + 1);
-    if (e.key === 'ArrowLeft')  go(idx - 1);
-  });
-  let wheelAcc = 0, wheelLock = false, wheelTimer = null;
-  stage.addEventListener('wheel', e => {
-    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;   /* scroll vertical: normal */
-    e.preventDefault();
-    if (!wheelLock) {
-      wheelAcc += e.deltaX;
-      if (Math.abs(wheelAcc) > 50) { go(idx + (wheelAcc > 0 ? 1 : -1)); wheelAcc = 0; wheelLock = true; }
-    }
-    clearTimeout(wheelTimer);                               /* un gesto = un paso (aunque haya inercia) */
-    wheelTimer = setTimeout(() => { wheelLock = false; wheelAcc = 0; }, 140);
-  }, {passive:false});
-
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
 
   layout();
-  go(0);
+  ring.render();
 })();
 
 /* ═══════════════════════ MOBILE: infinito, peek, swipe + dots ═══════════════════════ */
@@ -1335,7 +1378,10 @@ function createDots(dotsEl, N, onPick) {
   const N      = PROJECTS.length;
   let   STEP   = 165;            /* distancia entre centros de burbujas (px); se recalcula con la burbuja */
 
-  const slides = PROJECTS.map(p => {
+  /* Anillo de al menos 6 burbujas (si hay pocos proyectos se repiten) para que ninguna burbuja visible "salte" de un lado al otro */
+  const L = N * Math.max(1, Math.ceil(6 / N));
+  const slides = Array.from({length: L}, (_, i) => {
+    const p = PROJECTS[i % N];
     const el = document.createElement('div');
     el.className = 'm-slide';
     el.append(buildLabel(p, 'm-label'), buildPill(p, 'mobile-pill', false));
@@ -1343,90 +1389,19 @@ function createDots(dotsEl, N, onPick) {
     return el;
   });
   const labels = slides.map(el => el.querySelector('.m-label'));
-  let idx = 0, dragging = false, moved = false, startX = 0, startT = 0;
-  const updateDots = createDots(document.getElementById('mDots'), N, i => go(i));
-
-  /* Distancia circular de cada slide al activo => carrusel infinito */
-  function circ(i) {
-    let o = ((i - idx) % N + N) % N;
-    if (o > N / 2) o -= N;
-    return o;
-  }
-
-  const prevOff = slides.map(() => null);
-  function render(frac) {
-    slides.forEach((el, i) => {
-      /* Posición real (sin recortar): cada burbuja tiene su propio lugar, así no se encima ninguna al arrastrar */
-      const off = circ(i);
-      /* Si la burbuja "da la vuelta" al otro extremo, se reubica sin animar (está invisible) */
-      const wrapped = prevOff[i] !== null && Math.abs(off - prevOff[i]) > N / 2;
-      prevOff[i] = off;
-      if (wrapped) el.style.transition = 'none';
-      const pos = off + frac;
-      const a   = Math.abs(pos);
-      const scale   = 1 - 0.16 * Math.min(a, 1.5);
-      const opacity = a <= 1 ? 1 - 0.5 * a : Math.max(0, 0.5 - 0.5 * (a - 1));
-      const blur    = Math.min(a, 1.2) * 3;
-      el.style.transform     = 'translate3d(' + (pos * STEP).toFixed(1) + 'px,0,0) scale(' + scale.toFixed(3) + ')';
-      el.style.opacity       = opacity.toFixed(3);
-      el.style.filter        = blur > 0.05 ? 'blur(' + blur.toFixed(2) + 'px)' : 'none';
-      el.style.zIndex        = String(100 - Math.round(a * 10));
-      el.style.pointerEvents = a < 1.6 ? 'auto' : 'none';
-      labels[i].style.opacity = Math.max(0, 1 - a * 2).toFixed(3);
-      if (wrapped) { void el.offsetWidth; requestAnimationFrame(() => { el.style.transition = ''; }); }
-    });
-  }
-
-  function go(i) {
-    idx = ((i % N) + N) % N;
-    render(0);
-    updateDots(idx);
-  }
-
-  /* Arrastre con el dedo (o mouse) */
-  stage.addEventListener('pointerdown', e => {
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
-    dragging = true; moved = false;
-    startX = e.clientX; startT = performance.now();
-    window.addEventListener('pointermove',  onMove);
-    window.addEventListener('pointerup',    onUp);
-    window.addEventListener('pointercancel', onCancel);
-  });
-  function onMove(e) {
-    const dx = e.clientX - startX;
-    if (!moved && Math.abs(dx) > 6) { moved = true; stage.classList.add('dragging'); }
-    if (moved) render(Math.max(-1, Math.min(1, dx / STEP)));
-  }
-  function endDrag() {
-    dragging = false;
-    stage.classList.remove('dragging');
-    window.removeEventListener('pointermove',  onMove);
-    window.removeEventListener('pointerup',    onUp);
-    window.removeEventListener('pointercancel', onCancel);
-    setTimeout(() => { moved = false; }, 0); /* después del click que dispara el navegador */
-  }
-  function onUp(e) {
-    const dx = e.clientX - startX;
-    const v  = Math.abs(dx) / Math.max(1, performance.now() - startT);
-    const swiped = moved && (Math.abs(dx) > 45 || v > 0.4);
-    endDrag();
-    if (swiped) go(dx < 0 ? idx + 1 : idx - 1);
-    else render(0);
-  }
-  function onCancel() { endDrag(); render(0); }   /* p.ej. el navegador tomó el gesto para scroll vertical */
-
-  /* Tocar un vecino lo centra; tocar el central abre el proyecto */
-  slides.forEach((el, i) => el.addEventListener('click', e => {
-    if (moved) { e.preventDefault(); return; }
-    if (circ(i) !== 0) { e.preventDefault(); go(i); }
-  }));
-
-  stage.addEventListener('keydown', e => {
-    if (e.key === 'ArrowRight') go(idx + 1);
-    if (e.key === 'ArrowLeft')  go(idx - 1);
+  const updateDots = createDots(document.getElementById('mDots'), N, n => ring.go(n));
+  const ring = createRing({
+    stage, slides, labels, L, N, wheel: false, peek: 1,            /* tocar un vecino lo centra; tocar el central abre el proyecto */
+    step: () => STEP,
+    onActive: n => updateDots(n),
+    style(d) {
+      const a = Math.abs(d);
+      if (a > 2.2) return null;
+      return { x: d * STEP, s: 1 - 0.16 * Math.min(a, 1.5), op: a <= 1 ? 1 - 0.5 * a : Math.max(0, 0.5 - 0.5 * (a - 1)),
+               z: 100 - Math.round(a * 10), pe: a < 1.6, lab: Math.max(0, 1 - a * 2), blur: Math.round(Math.min(a, 1.2) * 6) / 2 };
+    }
   });
 
-  /* Tamaño: la burbuja se achica en pantallas bajas para que título + carrusel + dots quepan en una pantalla */
   const sec = document.getElementById('sec-projects');
   let lastLayoutKey = '';
   function layout() {
@@ -1443,15 +1418,13 @@ function createDots(dotsEl, N, onPick) {
     STEP = mw * 165 / 180;
     stage.style.setProperty('--mw', mw.toFixed(1) + 'px');
     stage.style.setProperty('--mh', Math.round(mw / 0.44 + FIXED) + 'px');
-    stage.classList.add('no-anim');
-    render(0);
-    requestAnimationFrame(() => requestAnimationFrame(() => stage.classList.remove('no-anim')));
+    ring.render();
   }
   onViewportChange(layout);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
 
   layout();
-  go(0);
+  ring.render();
 })();
 
 /* ═══════════════════ RECORRIDO: portada → biografía → proyectos → resumen ═══════════════════
@@ -1474,6 +1447,9 @@ function createDots(dotsEl, N, onPick) {
   /* GROW: cuánto scroll (en pantallas) dura el crecimiento del punto · GROW_AT: en qué punto de la entrada de la pantalla de
      proyectos se asoma el punto y EMPIEZA a crecer (0.5 = cuando su centro cruza el borde inferior), así crece mientras sube */
   const K = { GROW: 0.8, GROW_AT: 0.5 };
+  /* ¿El navegador anima por scroll en el hilo del compositor? (Chrome, Edge, Safari 26+). Si no, lo hace el JS con suavizado. */
+  const NATIVE_DOT = !!(window.CSS && CSS.supports && CSS.supports('animation-timeline: scroll()') && CSS.supports('animation-range: 0px 1px'));
+  if (NATIVE_DOT) document.documentElement.classList.add('dot-native');
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
   let VH = stableVH(), Pt = 0, aboutH = 0, resumenTop = 0, lastG = -1, ticking = false;
@@ -1484,6 +1460,11 @@ function createDots(dotsEl, N, onPick) {
     Pt = projWrap.offsetTop;            /* dónde empieza la pantalla de proyectos */
     aboutH = about.offsetHeight;        /* alto de la biografía (más que la pantalla si el texto no cabe) */
     resumenTop = resumen.offsetTop;
+    if (NATIVE_DOT) {                                                    /* rango de scroll (px) en que crece el punto */
+      const g0 = Pt - (1 - K.GROW_AT) * VH;
+      document.documentElement.style.setProperty('--g0', Math.round(g0) + 'px');
+      document.documentElement.style.setProperty('--g1', Math.round(g0 + K.GROW * VH) + 'px');
+    }
   }
 
   /* A dónde lleva cada atajo / indicador */
@@ -1503,12 +1484,21 @@ function createDots(dotsEl, N, onPick) {
     goTo(a.dataset.goto);
   });
 
-  /* El punto crece: de 2 % a tamaño completo; solo se puede tocar cuando terminó */
-  function applyGrow(g) {
-    const e = g * g * (3 - 2 * g);                                     /* suavizado */
+  /* Alternativa sin animaciones guiadas por scroll: el JS escala el punto con un suavizado que interpola fotograma a fotograma
+     (los eventos de scroll del celular llegan a saltos; sin interpolar, el crecimiento se vería entrecortado). Solo corre mientras se mueve. */
+  let gShown = 0, gTarget = 0, dotRaf = 0, dotLast = 0;
+  function paintDot(g) {
+    const e = g * g * (3 - 2 * g);                                       /* suavizado */
     projContent.style.transform = g >= 1 ? 'none' : 'scale(' + (0.02 + 0.98 * e).toFixed(4) + ')';
-    proj.style.pointerEvents = g >= 0.98 ? 'auto' : 'none';
   }
+  function dotStep(t) {
+    const dt = Math.min(0.05, (t - dotLast) / 1000); dotLast = t;
+    gShown += (gTarget - gShown) * (1 - Math.exp(-dt * 16));
+    if (Math.abs(gTarget - gShown) < 0.0015) gShown = gTarget;
+    paintDot(gShown);
+    dotRaf = gShown === gTarget ? 0 : requestAnimationFrame(dotStep);
+  }
+  function setDot(g) { gTarget = g; if (!dotRaf) { dotLast = performance.now(); dotRaf = requestAnimationFrame(dotStep); } }
 
   function update() {
     ticking = false;
@@ -1517,7 +1507,11 @@ function createDots(dotsEl, N, onPick) {
 
     const g0 = Pt - (1 - K.GROW_AT) * vh;                               /* el punto se asoma por el borde inferior */
     const g  = clamp((s - g0) / (K.GROW * vh), 0, 1);
-    if (g !== lastG) { applyGrow(g); lastG = g; }
+    if (g !== lastG) {
+      lastG = g;
+      proj.style.pointerEvents = g >= 0.98 ? 'auto' : 'none';            /* solo se puede tocar cuando el punto terminó de crecer */
+      if (!NATIVE_DOT) setDot(g);
+    }
 
     /* Indicador de la biografía: visible mientras se lee; se va cuando la biografía empieza a salir */
     const bioEnd = aboutH + 0.2 * vh;                                    /* scroll en que el pie de la biografía llega al borde inferior */
