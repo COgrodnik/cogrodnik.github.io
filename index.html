@@ -31,11 +31,11 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
    ESCENA — un solo recorrido con el scroll:
    portada → biografía → proyectos (aparecen y crecen) → resumen
    El escenario queda fijo (sticky) mientras dura la animación y luego se va con el scroll.
-   Largo de la escena (en alturas de pantalla) = 1 portada + 0.35 pausa + 0.9 aparición + 0.3 pausa + 1 salida
-   (los mismos números están en el JS: constante K), más --bio-extra: el scroll extra que necesita leerse
+   Largo de la escena (en alturas de pantalla) = 1 portada + 0.2 pausa + 1 cambio de pantalla + 0.8 crecimiento + 0.3 pausa + 1 salida
+   (los mismos números están en el JS: constante K; el JS escribe --scene-vh), más --bio-extra: el scroll extra que necesita leerse
    la biografía cuando es más alta que la pantalla (el texto sube con el mismo scroll de la página).
 ═══════════════════════════════════════ */
-#scene { position: relative; height: calc(355vh + var(--bio-extra, 0px)); height: calc(355dvh + var(--bio-extra, 0px)); }
+#scene { position: relative; height: calc(var(--scene-vh, 4.3) * 100vh + var(--bio-extra, 0px)); height: calc(var(--scene-vh, 4.3) * 100dvh + var(--bio-extra, 0px)); }
 #stage { position: sticky; top: 0; height: 100vh; height: 100dvh; overflow: hidden; background: #fff; }
 
 /* ═══════════════════════════════════════
@@ -290,13 +290,17 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
 .sec-btn-light { background: #d9d9d9; color: #555; }
 
 /* ─── PROYECTOS: ocupa todo el escenario, aparece y crece con el scroll ─── */
+/* La pantalla de proyectos está DEBAJO de la biografía: al seguir scrolleando, la biografía sube y sale, y
+   esta pantalla entra desde abajo (sin fundidos ni opacidad). Su contenido nace como un punto y crece. */
 #sec-projects {
-  position:absolute; inset:0; z-index:2;      /* sin fondo: el blanco lo pone el escenario; un fondo aquí se veía como un rectángulo al escalar */
-  display:flex; flex-direction:column; padding-top:56px;        /* 56px: despeja la barra con el nombre */
-  opacity:0; visibility:hidden; pointer-events:none;
-  transform-origin:50% 50%; will-change: transform, opacity;
+  position:absolute; inset:0; z-index:2;
+  visibility:hidden; pointer-events:none; will-change: transform;
 }
-#about { transform-origin: 50% 50%; will-change: transform, opacity; }
+.proj-content {
+  display:flex; flex-direction:column; height:100%; padding-top:56px;   /* 56px: despeja la barra con el nombre */
+  transform-origin:50% 50%; will-change: transform;
+}
+#about { will-change: transform; }
 .sec-nav-compact { padding:6px 8% 0; align-items:center; flex-wrap:nowrap; gap:16px; }
 .sec-nav-compact .sec-title { font-size: clamp(26px, min(3.6vw, 6vh), 52px); }
 .sec-nav-compact .sec-nav-buttons { padding-top:0; }
@@ -741,6 +745,7 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
     </button>
 
     <section id="sec-projects" class="sec" aria-label="Proyectos">
+      <div class="proj-content">
       <div class="sec-nav sec-nav-compact">
         <h2 class="sec-title">PROYECTOS</h2>
         <div class="sec-nav-buttons">
@@ -759,6 +764,7 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
           <div class="mobile-stage" id="mStage" tabindex="0" role="region" aria-roledescription="carrusel" aria-label="Proyectos"></div>
           <div class="m-dots" id="mDots"></div>
         </div>
+      </div>
       </div>
     </section>
   </div>
@@ -1461,19 +1467,21 @@ function createDots(dotsEl, N, onPick) {
   const arrowUp  = document.getElementById('arrow-up');
   const about    = document.getElementById('about');
   const proj     = document.getElementById('sec-projects');
+  const projContent = proj.querySelector('.proj-content');
   const resumen  = document.getElementById('sec-resumen');
   const cue      = document.getElementById('bio-cue');
   const scene    = document.getElementById('scene');
   const aboutInner = about.querySelector('.about-inner');
 
   /* Etapas del scroll, en alturas de pantalla (los mismos números definen el largo de #scene en el CSS: 355vh) */
-  const K   = { HERO: 1, HOLD1: 0.35, SCALE: 0.9, HOLD2: 0.3 };
+  const K   = { HERO: 1, HOLD1: 0.2, TRANS: 1, GROW: 0.8, HOLD2: 0.3 };   /* 1 portada · pausa · cambio de pantalla (1:1 con el scroll) · crecimiento del punto · pausa */
   const BAR = 56;                 /* alto de la barra con el nombre */
   const EASE = 0.10;
   const lerp  = (a, b, t) => a + (b - a) * t;
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
-  let smoothY = window.scrollY, lastP = -1, heroHidden = null, lastRead = -1;
+  let smoothY = window.scrollY, lastKey = '', heroHidden = null, lastRead = -1;
+  scene.style.setProperty('--scene-vh', String(K.HERO + K.HOLD1 + K.TRANS + K.GROW + K.HOLD2 + 1));   /* largo de la escena, en alturas de pantalla */
 
   /* E = scroll extra para leer la biografía cuando no cabe en la pantalla (celulares, ventanas bajas).
      El texto sube con el scroll de la página, así hay un solo scroll y nunca se pasa de largo. */
@@ -1492,7 +1500,7 @@ function createDots(dotsEl, N, onPick) {
     return {
       top:      0,
       about:    vh,                                                    /* biografía (portada ya arriba) */
-      projects: (K.HERO + K.HOLD1 + K.SCALE + K.HOLD2 / 2) * vh + E,  /* proyectos ya completos */
+      projects: (K.HERO + K.HOLD1 + K.TRANS + K.GROW + K.HOLD2 / 2) * vh + E,  /* proyectos ya completos */
       resumen:  resumen.offsetTop - BAR
     };
   }
@@ -1509,17 +1517,17 @@ function createDots(dotsEl, N, onPick) {
     goTo(a.dataset.goto);
   });
 
-  /* Los proyectos aparecen y crecen; la biografía se desvanece */
-  function applyProjects(p) {
-    const e = p * p * (3 - 2 * p);                                  /* suavizado */
-    proj.style.visibility    = p <= 0 ? 'hidden' : 'visible';
-    proj.style.opacity       = clamp((p - 0.22) / 0.4, 0, 1).toFixed(3);
-    proj.style.transform     = p >= 1 ? 'none' : 'translateY(' + ((1 - e) * 7).toFixed(2) + 'vh) scale(' + (0.55 + 0.45 * e).toFixed(4) + ')';
-    proj.style.pointerEvents = p >= 0.9 ? 'auto' : 'none';
-    about.style.opacity       = clamp(1 - p / 0.3, 0, 1).toFixed(3);
-    about.style.transform     = p <= 0 ? 'none' : 'translateY(' + (-e * 4).toFixed(2) + 'vh) scale(' + (1 - 0.05 * e).toFixed(4) + ')';
-    about.style.visibility    = p >= 0.32 ? 'hidden' : 'visible';
-    about.style.pointerEvents = p <= 0.05 ? 'auto' : 'none';
+  /* Cambio de pantalla: la biografía sube y sale; la pantalla de proyectos entra desde abajo (movimiento 1:1 con el
+     scroll, como en una página normal). Después, el contenido de proyectos crece desde un punto. Sin opacidad. */
+  function applyScene(t, g, vh) {
+    about.style.transform  = t <= 0 ? 'none' : 'translate3d(0,' + (-t * vh).toFixed(1) + 'px,0)';
+    about.style.visibility = t >= 1 ? 'hidden' : 'visible';
+    proj.style.visibility  = t <= 0 ? 'hidden' : 'visible';
+    proj.style.transform   = t >= 1 ? 'none' : 'translate3d(0,' + ((1 - t) * vh).toFixed(1) + 'px,0)';
+    const e = g * g * (3 - 2 * g);                                  /* suavizado */
+    projContent.style.transform = g >= 1 ? 'none' : 'scale(' + (0.02 + 0.98 * e).toFixed(4) + ')';   /* de un punto (2 %) a tamaño completo */
+    proj.style.pointerEvents = g >= 0.98 ? 'auto' : 'none';
+    about.style.pointerEvents = t <= 0.02 ? 'auto' : 'none';
   }
 
   function tick() {
@@ -1540,13 +1548,15 @@ function createDots(dotsEl, N, onPick) {
     const read = clamp(smoothY - vh, 0, E);
     if (Math.abs(read - lastRead) > 0.1) { aboutInner.style.transform = read > 0 ? 'translate3d(0,' + (-read).toFixed(1) + 'px,0)' : 'none'; lastRead = read; }
 
-    /* 2) Los proyectos aparecen y escalan (después de la portada, la lectura de la biografía y una pausa) */
-    const a = (K.HERO + K.HOLD1) * vh + E, b = a + K.SCALE * vh;
-    const p = clamp((smoothY - a) / (b - a), 0, 1);
-    if (Math.abs(p - lastP) > 0.0004 || p === 0 || p === 1) { if (p !== lastP) applyProjects(p); lastP = p; }
+    /* 2) Cambio de pantalla y crecimiento del punto (después de la portada, la lectura de la biografía y una pausa) */
+    const t0 = (K.HERO + K.HOLD1) * vh + E;
+    const t  = clamp((smoothY - t0) / (K.TRANS * vh), 0, 1);                    /* biografía sale / proyectos entran */
+    const g  = clamp((smoothY - t0 - K.TRANS * vh) / (K.GROW * vh), 0, 1);      /* el punto crece */
+    const key = t.toFixed(4) + ',' + g.toFixed(4) + ',' + vh;
+    if (key !== lastKey) { applyScene(t, g, vh); lastKey = key; }
 
-    /* 2b) Indicador "scroll" de la biografía: visible mientras se lee la biografía, se va al empezar la transición */
-    const cueOp = clamp((heroY - vh * 0.85) / (vh * 0.15), 0, 1) * clamp(1 - p / 0.06, 0, 1);
+    /* 2b) Indicador "scroll" de la biografía: visible mientras se lee la biografía, se va apenas empieza a salir */
+    const cueOp = clamp((heroY - vh * 0.85) / (vh * 0.15), 0, 1) * clamp(1 - t / 0.08, 0, 1);
     cue.style.opacity = cueOp.toFixed(3);
     cue.classList.toggle('show', cueOp > 0.5);
 
