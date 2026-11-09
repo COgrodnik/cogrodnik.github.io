@@ -113,7 +113,6 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
   font-family: 'Montserrat', sans-serif; opacity: 0; pointer-events: none;
 }
 #bio-cue.show { pointer-events: auto; }
-.cue-label { font-size: 12px; font-weight: 400; font-style: italic; color: rgba(0,0,0,0.62); letter-spacing: 0.08em; }
 #bio-cue svg { width: 18px; height: 18px; animation: bounceDown 2.2s ease-in-out infinite; }
 @media (max-width: 600px) {
   #bio-cue { width: 100%; padding: 30px 0 14px; }
@@ -239,8 +238,6 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
 
 /* Desktop: "scroll", Mobile: "desliza" via CSS */
 @media (max-width: 600px) {
-  #cueLabel { font-size: 0 !important; }
-  #cueLabel::after { content: "desliza para ver proyectos"; font-size: 12px; font-weight: 400; font-style: italic; color: rgba(0,0,0,0.62); letter-spacing: 0.08em; }
   #scrollLabel { font-size: 0 !important; }
   #scrollLabel::after {
     content: "desliza";
@@ -257,7 +254,7 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
   .about-inner { padding-top: 64px; padding-bottom: 24px; }
   .hola-title { font-size: clamp(40px, 4.6vw, 52px); margin-bottom: 12px; }
   .about-p { margin-bottom: 6px; line-height: 1.65; }
-  #about .site-footer { margin-top: 18px; padding-top: 14px; padding-bottom: 16px; }
+  #about .site-footer { margin-top: 18px; }
 }
 
 /* Título de la portada: más ancho con Power Grotesk Heavy, así que en celular se ajusta al ancho de pantalla */
@@ -277,17 +274,6 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
   font-size: clamp(38px, 6.2vw, 76px); letter-spacing: -0.01em;
   display: inline-block; color: var(--dark); line-height: 1;
 }
-.sec-nav-buttons { display:flex; gap:12px; align-items:center; padding-top:8px; }
-.sec-btn {
-  font-weight: 800; font-family: var(--font-sub, 'Montserrat', sans-serif);
-  display:inline-flex; align-items:center; justify-content:center;
-  padding:12px 32px; font-size:13px; letter-spacing:0.04em;
-  border-radius:999px; text-decoration:none; cursor:pointer; border:none;
-  transition: transform 0.15s ease, opacity 0.15s ease;
-}
-.sec-btn:hover { transform: translateY(-1px); opacity: 0.85; }
-.sec-btn-dark  { background: var(--btn-dark); color: var(--white); }
-.sec-btn-light { background: #d9d9d9; color: #555; }
 
 /* ─── PROYECTOS: ocupa todo el escenario, aparece y crece con el scroll ─── */
 /* La pantalla de proyectos está DEBAJO de la biografía: al seguir scrolleando, la biografía sube y sale, y
@@ -303,12 +289,12 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
 #about { will-change: transform; }
 .sec-nav-compact { padding:6px 8% 0; align-items:center; flex-wrap:nowrap; gap:16px; }
 .sec-nav-compact .sec-title { font-size: clamp(26px, min(3.6vw, 6vh), 52px); }
-.sec-nav-compact .sec-nav-buttons { padding-top:0; }
-.sec-body { flex:1; min-height:0; display:flex; flex-direction:column; justify-content:center; padding-bottom:6px; }
+.sec-nav-compact .sec-body { flex:1; min-height:0; display:flex; flex-direction:column; justify-content:center; padding-bottom:6px; }
 
 /* ─── RESUMEN: contenido normal que sigue después de la escena ─── */
 #sec-resumen { position:relative; z-index:3; background:#fff; padding-top:24px; }
 .site-footer-end { margin-top:0; padding:28px 52px 48px; }
+#about .site-footer { padding: 0; gap: 0; }
 @media (max-width: 600px) { .site-footer-end { padding: 24px 24px 72px; } }
 
 /* ─── MAIN GRID ─── */
@@ -594,7 +580,6 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
 
 @media (max-width: 700px) {
   .sec-nav-compact { padding: 8px 6% 0; }
-  .sec-nav-compact .sec-nav-buttons { display: none; }          /* en celular los atajos sobran: se navega con el scroll */
   .sec-nav-compact .sec-title { font-size: 34px; }
 }
 
@@ -716,19 +701,7 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
       <p class="about-p">Con espíritu emprendedor, he participado en distintos proyectos, entre ellos Neast Components™, empresa dedicada al diseño de componentes de seguridad para ciclistas de montaña, y más recientemente Yuki Pet, marca de juguetes especializados para perros.</p>
       <p class="about-p">Tengo especial interés en la fabricación digital, desde tecnologías aditivas (SLA, SLS, FDM) hasta robótica y procesos sustractivos (láser, CNC). Además, cuento con experiencia en el FabLab de Diseño de la Universidad Adolfo Ibáñez.</p>
       <p class="about-p">Paralelamente, llevo algunos años explorando y desarrollando mis habilidades en fotografía y filmmaking.</p>
-      <footer id="site-footer" class="site-footer">
-        <a href="https://www.instagram.com/cristobalogrodnik" target="_blank" rel="noopener" class="footer-link" aria-label="Instagram">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
-        </a>
-        <div class="footer-divider"></div>
-        <a href="https://www.linkedin.com/in/cristobal-ogrodnik-bert-987a30190/" target="_blank" rel="noopener" class="footer-link" aria-label="LinkedIn">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
-        </a>
-        <div class="footer-divider"></div>
-        <a href="mailto:cris.ogrodnik@gmail.com?subject=Hola%20Cristóbal" class="footer-link" aria-label="Email">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        </a>
-      </footer>
+      <footer id="site-footer" class="site-footer" aria-hidden="true"></footer>   <!-- solo la línea separadora -->
     </div>
     <div class="photo-col">
       <div class="photo-circle">
@@ -740,7 +713,6 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
 </section>
 
     <button id="bio-cue" data-goto="projects" aria-label="Seguir bajando para ver los proyectos">
-      <span class="cue-label" id="cueLabel">scroll para ver proyectos</span>
       <svg viewBox="0 0 18 18" fill="none"><path d="M3 6L9 12L15 6" stroke="rgba(0,0,0,0.62)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
 
@@ -748,10 +720,6 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
       <div class="proj-content">
       <div class="sec-nav sec-nav-compact">
         <h2 class="sec-title">PROYECTOS</h2>
-        <div class="sec-nav-buttons">
-          <a href="#resumen" class="sec-btn sec-btn-dark" data-goto="resumen">Resumen</a>
-          <a href="#" class="sec-btn sec-btn-light" data-goto="top">Inicio</a>
-        </div>
       </div>
       <div class="sec-body">
         <!-- Escritorio: carrusel infinito de 7 posiciones (se genera desde projects.js) -->
@@ -773,10 +741,6 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
 <section id="sec-resumen" class="sec" aria-label="Resumen">
   <nav class="sec-nav">
     <h2 class="sec-title reveal">RESUMEN</h2>
-    <div class="sec-nav-buttons reveal">
-      <a href="#proyectos" class="sec-btn sec-btn-dark" data-goto="projects">Proyectos</a>
-      <a href="#" class="sec-btn sec-btn-light" data-goto="top">Inicio</a>
-    </div>
   </nav>
 
 <div class="resume-grid">
