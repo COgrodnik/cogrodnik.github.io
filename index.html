@@ -161,7 +161,12 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
 .hero-center { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; }
 .hero-subtitle { margin-bottom: 12px; font-size:15px; font-weight:300; font-style:italic; letter-spacing:0.1em; color:rgba(255,255,255,0.52); }
 .hero-title-text { font-family: var(--font-title, 'Montserrat', sans-serif); font-weight: 900; font-style: normal; letter-spacing: -0.01em; line-height: 0.9; font-size:clamp(56px,8.5vw,100px);     color:#fff; text-transform:uppercase; }
-.hero-web { margin-top: 10px; font-size:clamp(24px,3.6vw,44px); font-weight:300; font-style:italic; color:rgba(255,255,255,0.72); text-align:right; }
+.hero-web { margin-top: 10px; font-size:clamp(24px,3.6vw,44px); font-weight:300; font-style:italic; color:rgba(255,255,255,0.72); text-align:right;
+            white-space:nowrap; min-height:1.3em; line-height:1.3; }
+/* "Máquina de escribir": alineada a la derecha, el cursor queda fijo en el borde y las letras crecen hacia la izquierda */
+.hw-caret { display:inline-block; width:2px; height:0.92em; margin-left:0.1em; vertical-align:-0.1em; background:rgba(255,255,255,0.85); }
+.hw-caret.blink { animation:hwBlink var(--blink, 900ms) steps(1, end) infinite; }      /* 1 parpadeo = visible + oculto */
+@keyframes hwBlink { 0%, 49.99% { opacity:1; } 50%, 100% { opacity:0; } }
 
 .hero-bottom { position:absolute; bottom:36px; left:52px; right:52px; display:flex; align-items:flex-end; justify-content:space-between; }
 .hero-name { font-weight: 800; font-family: var(--font-sub, 'Montserrat', sans-serif);  font-size:11px;  letter-spacing:0.22em; text-transform:uppercase; color:#fff; line-height:1.4; }
@@ -715,7 +720,7 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
   <div class="hero-center">
     <p class="hero-subtitle">Design engineer</p>
     <h1 class="hero-title-text">PORTFOLIO</h1>
-    <p class="hero-web">web</p>
+    <p class="hero-web" id="heroWeb" aria-label="web, diseño, arquitectura, arte e ingeniería"><span class="hw-text" aria-hidden="true">web</span><span class="hw-caret" aria-hidden="true"></span></p>
   </div>
   <div class="hero-bottom">
     <div class="hero-name">CRISTÓBAL<br>OGRODNIK <span>CL</span></div>
@@ -1810,6 +1815,58 @@ function createDots(dotsEl, N, onPick) {
   window.addEventListener('blur', () => { inWindow = false; evaluate(); });
   window.addEventListener('scroll', () => { if (inWindow) evaluate(); }, { passive: true });          /* la portada se va con el scroll */
   if ('ResizeObserver' in window) new ResizeObserver(() => { heroH = hero.offsetHeight; evaluate(); }).observe(hero);
+})();
+
+/* ═══════════════════ PORTADA: palabra que se escribe y se borra ═══════════════════
+   "web|" → el cursor parpadea 5 veces → se borra de atrás hacia adelante → se escribe la palabra siguiente → ...
+   Alineado a la derecha: el cursor queda fijo en el borde y las letras crecen hacia la izquierda.
+   Mientras se escribe o se borra el cursor queda fijo (como en un editor real); solo parpadea con la palabra completa.
+   Se detiene si la portada no se ve o la pestaña está oculta. Con "reducir movimiento" queda "web" estático. Todo en CFG. */
+(() => {
+  const el = document.getElementById('heroWeb');
+  const hero = document.getElementById('hero');
+  if (!el || !hero) return;
+  const text = el.querySelector('.hw-text'), caret = el.querySelector('.hw-caret');
+  const WORDS = ['web', 'diseño', 'arquitectura', 'arte', 'ingeniería'];       /* al final vuelve a "web" */
+  const CFG = {
+    blinks:  5,                  /* parpadeos con la palabra completa antes de borrar */
+    blinkMs: 900,                /* duración de un parpadeo (visible + oculto) */
+    typeMin: 80, typeMax: 150,   /* ms entre letras al escribir (varía, como una persona) */
+    eraseStart: 85, eraseMin: 38,/* al borrar: arranca a eraseStart ms por letra y acelera hasta eraseMin (como mantener la tecla) */
+    gapMs:   380                 /* pausa con el cursor solo, entre borrar y escribir */
+  };
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;     /* queda "web" estático */
+  caret.style.setProperty('--blink', CFG.blinkMs + 'ms');
+
+  let visible = true;
+  if ('IntersectionObserver' in window) new IntersectionObserver(es => { visible = es[0].isIntersecting; }).observe(hero);
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  async function tick(ms) { await sleep(ms); while (!visible || document.hidden) await sleep(250); }    /* en pausa si no se ve */
+
+  (async function run() {
+    let i = 0;
+    await tick(700);                                                            /* al cargar, "web|" ya está escrito */
+    for (;;) {
+      caret.classList.remove('blink'); void caret.offsetWidth; caret.classList.add('blink');   /* reinicia: empieza visible */
+      await tick(CFG.blinks * CFG.blinkMs);                                     /* los 5 parpadeos */
+      caret.classList.remove('blink');                                          /* cursor fijo mientras borra */
+
+      let s = text.textContent, n = 0;
+      while (s.length) {                                                        /* borrado: de atrás hacia adelante, acelerando */
+        s = s.slice(0, -1); text.textContent = s;
+        await tick(Math.max(CFG.eraseMin, CFG.eraseStart - n++ * 7));
+      }
+      await tick(CFG.gapMs);
+
+      i = (i + 1) % WORDS.length;
+      const w = WORDS[i];
+      for (let k = 1; k <= w.length; k++) {                                     /* escritura */
+        text.textContent = w.slice(0, k);
+        await tick(rnd(CFG.typeMin, CFG.typeMax) + (Math.random() < 0.12 ? rnd(60, 140) : 0));   /* de vez en cuando una pausa breve */
+      }
+    }
+  })();
 })();
 </script>
 
