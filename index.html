@@ -144,6 +144,9 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
     #111111;
 }
 
+/* Constelación interactiva: primer hijo de la portada, así queda debajo de todo el texto */
+#hero-fx { position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none; opacity:0; transition:opacity 1.2s ease; }
+#hero-fx.on { opacity:1; }
 .hero-logo { position:absolute; top:36px; left:52px; font-size:13px; font-weight:800; letter-spacing:0.1em; color:#fff; }
 .hero-logo img { height: 32px; width: auto; display: block; }
 
@@ -696,6 +699,7 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
 </head>
 <body>
 <section id="hero">
+  <canvas id="hero-fx" aria-hidden="true"></canvas>
   <div class="hero-logo">
     <!-- Cuando tengas el logo: quita el comentario de la línea de abajo y borra la de arriba -->
     <!-- <img src="logo.png" alt="Logo" style="height:32px;width:auto;display:block;"> -->
@@ -1553,6 +1557,209 @@ function createDots(dotsEl, N, onPick) {
     entries.forEach((entry, i) => { if (entry.isIntersecting) setTimeout(() => entry.target.classList.add('visible'), i * 40); });
   }, { threshold: 0.05 });
   allReveal.forEach(el => obs.observe(el));
+})();
+
+/* ═══════════════════ PORTADA: constelación que dibuja líneas con el mouse ═══════════════════
+   Un <canvas> 2D sin librerías, con tres capas:
+   1) nodos que derivan por un campo de flujo suave y se unen con hilos tenues cuando están cerca
+   2) cerca del puntero la red se enciende: los hilos brillan, los nodos se acercan girando y se conectan al cursor
+   3) el cursor deja un trazo curvo que se dibuja y se desvanece (como dibujar sobre la portada)
+   Sin mouse (celular, o 2.5 s sin moverlo) un "cursor fantasma" recorre la portada. Clic/toque = pulso que empuja los nodos.
+   Cuidado con el rendimiento: se detiene cuando la portada sale de pantalla o la pestaña se oculta, usa menos nodos en celular,
+   limita la resolución del lienzo y respeta "reducir movimiento". Todos los parámetros están en CFG. */
+(() => {
+  const hero   = document.getElementById('hero');
+  const canvas = document.getElementById('hero-fx');
+  if (!hero || !canvas || !canvas.getContext) return;
+  const ctx     = canvas.getContext('2d');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const coarse  = window.matchMedia('(pointer: coarse)').matches;
+  const TAU = Math.PI * 2;
+
+  const CFG = {
+    area:     coarse ? 14000 : 7600,     /* px² de portada por nodo (más chico = más nodos) */
+    maxNodes: coarse ? 64 : 170,
+    link:     coarse ? 104 : 142,        /* distancia máxima a la que se unen dos nodos */
+    radius:   coarse ? 160 : 235,        /* radio de influencia del puntero */
+    rays:     1.7,                       /* los hilos del puntero llegan hasta radius × rays (rayos largos y tenues) */
+    drift:    0.2,                       /* velocidad de la deriva ambiente (px por fotograma a 60 Hz) */
+    pull:     0.058, swirl: 0.04,        /* atracción hacia el puntero y giro a su alrededor */
+    maxSpeed: 2.4,
+    trailMs:  950,                       /* cuánto dura el trazo del cursor */
+    idleMs:   2500,                      /* sin mouse este tiempo: entra el cursor fantasma */
+    dprMax:   coarse ? 1.5 : 2,          /* tope de resolución del lienzo (cuida el rendimiento) */
+    minFrame: coarse ? 33 : 0,           /* en celular se limita a ~30 cuadros/s: la deriva lenta se ve igual y gasta la mitad */
+    glow:     !coarse                    /* resplandor del trazo (en celular se omite) */
+  };
+
+  let w = 0, h = 0, dpr = 1, nodes = [];
+  const ptr = { x: 0, y: 0, sx: 0, sy: 0, last: -1e9, started: false };   /* x,y: objetivo · sx,sy: posición suavizada */
+  const trail = [];
+  const LV = 6, buckets = Array.from({ length: LV }, () => []);
+  const rnd = (a, b) => a + Math.random() * (b - a);
+
+  const makeNode = () => ({ x: rnd(0, w), y: rnd(0, h), vx: 0, vy: 0, s: rnd(0.55, 1.5), r: rnd(0.7, 1.7), ph: rnd(0, TAU) });
+
+  function fit() {
+    w = hero.clientWidth; h = hero.clientHeight;
+    if (!w || !h) return;
+    dpr = Math.min(window.devicePixelRatio || 1, CFG.dprMax);
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const want = Math.min(CFG.maxNodes, Math.max(24, Math.round(w * h / CFG.area)));
+    while (nodes.length < want) nodes.push(makeNode());
+    if (nodes.length > want) nodes.length = want;
+    nodes.forEach(n => { n.x = Math.min(n.x, w); n.y = Math.min(n.y, h); });
+    if (!ptr.started) { ptr.x = ptr.sx = w / 2; ptr.y = ptr.sy = h / 2; ptr.started = true; }
+    if (reduced || !running) draw(0);                      /* con "reducir movimiento" se dibuja un solo cuadro estático */
+  }
+
+  /* ── Puntero (mouse o dedo) ── */
+  function setPtr(e) {
+    const r = hero.getBoundingClientRect();                 /* la portada sube con el scroll: se mide en cada evento */
+    ptr.x = e.clientX - r.left; ptr.y = e.clientY - r.top; ptr.last = performance.now();
+  }
+  function burst(x, y) {                                    /* pulso: empuja los nodos cercanos hacia afuera */
+    const R = CFG.radius * 1.35;
+    for (const n of nodes) {
+      const dx = n.x - x, dy = n.y - y, d = Math.hypot(dx, dy);
+      if (d < R && d > 0.1) { const f = (1 - d / R) * 4.2; n.vx += dx / d * f; n.vy += dy / d * f; }
+    }
+  }
+  if (!reduced) {
+    hero.addEventListener('pointermove', setPtr, { passive: true });
+    hero.addEventListener('pointerdown', e => { setPtr(e); burst(ptr.x, ptr.y); }, { passive: true });
+  }
+
+  /* ── Simulación ── */
+  function update(dt, t) {
+    const k = dt / 16.67;                                   /* normaliza a 60 Hz: se ve igual a 60, 90 o 120 Hz */
+    const idle = t - ptr.last > CFG.idleMs;
+    let tx = ptr.x, ty = ptr.y;
+    if (idle) {                                             /* cursor fantasma: una trayectoria suave que recorre la portada */
+      tx = w * (0.5 + 0.31 * Math.sin(t * 0.00033));
+      ty = h * (0.5 + 0.25 * Math.sin(t * 0.00046 + 1.3));
+    }
+    const sm = 1 - Math.exp(-dt * 0.018);                   /* suavizado del puntero (~55 ms) */
+    ptr.sx += (tx - ptr.sx) * sm; ptr.sy += (ty - ptr.sy) * sm;
+
+    const R = CFG.radius, px = ptr.sx, py = ptr.sy;
+    for (const n of nodes) {
+      const ang = Math.sin(n.x * 0.0035 + t * 0.00021 + n.ph) * Math.PI + Math.cos(n.y * 0.0042 - t * 0.00017) * Math.PI;
+      n.vx += (Math.cos(ang) * CFG.drift * n.s - n.vx) * 0.02 * k;                  /* tiende a la velocidad del campo de flujo */
+      n.vy += (Math.sin(ang) * CFG.drift * n.s - n.vy) * 0.02 * k;
+      const dx = px - n.x, dy = py - n.y, d2 = dx * dx + dy * dy;
+      if (d2 < R * R && d2 > 900) {                         /* a menos de 30 px no atrae: los nodos orbitan, no se apilan */
+        const d = Math.sqrt(d2), f = 1 - d / R;
+        n.vx += (dx / d * CFG.pull - dy / d * CFG.swirl) * f * k;
+        n.vy += (dy / d * CFG.pull + dx / d * CFG.swirl) * f * k;
+      }
+      const sp = Math.hypot(n.vx, n.vy);
+      if (sp > CFG.maxSpeed) { n.vx *= CFG.maxSpeed / sp; n.vy *= CFG.maxSpeed / sp; }
+      n.x += n.vx * k; n.y += n.vy * k;
+      if (n.x < -20) n.x = w + 20; else if (n.x > w + 20) n.x = -20;
+      if (n.y < -20) n.y = h + 20; else if (n.y > h + 20) n.y = -20;
+    }
+
+    /* trazo del cursor: se agrega un punto cuando el puntero avanzó y se descartan los viejos */
+    const lp = trail[trail.length - 1];
+    if (!lp || Math.hypot(px - lp.x, py - lp.y) > 2.5) trail.push({ x: px, y: py, t });
+    while (trail.length && t - trail[0].t > CFG.trailMs) trail.shift();
+  }
+
+  /* ── Dibujo ── */
+  function draw(t) {
+    ctx.clearRect(0, 0, w, h);
+    const px = ptr.sx, py = ptr.sy, R = CFG.radius, R2 = R * R, RR = R * CFG.rays, RR2 = RR * RR, L = CFG.link, L2 = L * L;
+    const live = !reduced;
+
+    if (live) {                                             /* halo suave bajo el cursor */
+      const g = ctx.createRadialGradient(px, py, 0, px, py, R * 0.9);
+      g.addColorStop(0, 'rgba(255,255,255,0.075)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g; ctx.fillRect(px - R, py - R, R * 2, R * 2);
+    }
+
+    /* hilos entre nodos y del puntero a los nodos, agrupados por nivel de brillo (pocos trazos = más rápido) */
+    for (const b of buckets) b.length = 0;
+    const put = (a, x1, y1, x2, y2) => { if (a < 0.012) return; buckets[Math.min(LV - 1, (a / 0.12) | 0)].push(x1, y1, x2, y2); };
+    const n = nodes.length;
+    for (let i = 0; i < n; i++) {
+      const A = nodes[i];
+      for (let j = i + 1; j < n; j++) {
+        const B = nodes[j], dx = A.x - B.x;
+        if (dx > L || dx < -L) continue;
+        const dy = A.y - B.y, d2 = dx * dx + dy * dy;
+        if (d2 > L2) continue;
+        const base = 1 - Math.sqrt(d2) / L;
+        let boost = 0;
+        if (live) { const mx = (A.x + B.x) * 0.5 - px, my = (A.y + B.y) * 0.5 - py, m2 = mx * mx + my * my; if (m2 < R2) boost = 1 - Math.sqrt(m2) / R; }
+        put(base * base * (0.11 + 0.62 * boost), A.x, A.y, B.x, B.y);
+      }
+      if (live) {
+        const dx = A.x - px, dy = A.y - py, d2 = dx * dx + dy * dy;
+        if (d2 < RR2) { const f = 1 - Math.sqrt(d2) / RR; put(Math.pow(f, d2 < R2 ? 1.25 : 2.2) * 0.8, px, py, A.x, A.y); }   /* cerca: hilos fuertes · lejos: rayos tenues */
+      }
+    }
+    ctx.lineCap = 'round';
+    for (let lv = 0; lv < LV; lv++) {
+      const seg = buckets[lv]; if (!seg.length) continue;
+      ctx.strokeStyle = 'rgba(255,255,255,' + ((lv + 0.5) * 0.12).toFixed(3) + ')';
+      ctx.lineWidth = 0.55 + lv * 0.13;
+      ctx.beginPath();
+      for (let i = 0; i < seg.length; i += 4) { ctx.moveTo(seg[i], seg[i + 1]); ctx.lineTo(seg[i + 2], seg[i + 3]); }
+      ctx.stroke();
+    }
+
+    /* nodos: los cercanos al puntero, más grandes y brillantes */
+    ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.beginPath();
+    for (const A of nodes) { const dx = A.x - px, dy = A.y - py; if (!live || dx * dx + dy * dy >= R2 * 0.45) { ctx.moveTo(A.x + A.r, A.y); ctx.arc(A.x, A.y, A.r, 0, TAU); } }
+    ctx.fill();
+    if (live) {
+      ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.beginPath();
+      for (const A of nodes) { const dx = A.x - px, dy = A.y - py; if (dx * dx + dy * dy < R2 * 0.45) { ctx.moveTo(A.x + A.r * 1.35, A.y); ctx.arc(A.x, A.y, A.r * 1.35, 0, TAU); } }
+      ctx.fill();
+
+      /* trazo del cursor: curva suave que se afina y se desvanece hacia atrás */
+      const m = trail.length;
+      if (m > 2) {
+        ctx.lineJoin = 'round';
+        for (let i = 1; i < m - 1; i++) {
+          const k = Math.max(0, 1 - (t - trail[i].t) / CFG.trailMs);
+          if (k <= 0.02) continue;
+          const p0 = trail[i - 1], p1 = trail[i], p2 = trail[i + 1];
+          const ax = (p0.x + p1.x) / 2, ay = (p0.y + p1.y) / 2, bx = (p1.x + p2.x) / 2, by = (p1.y + p2.y) / 2, a = Math.pow(k, 1.5);
+          ctx.beginPath(); ctx.moveTo(ax, ay); ctx.quadraticCurveTo(p1.x, p1.y, bx, by);
+          if (CFG.glow) { ctx.strokeStyle = 'rgba(255,255,255,' + (a * 0.11).toFixed(3) + ')'; ctx.lineWidth = 2 + 8 * k; ctx.stroke(); }     /* resplandor */
+          ctx.strokeStyle = 'rgba(255,255,255,' + (a * 0.95).toFixed(3) + ')'; ctx.lineWidth = 0.5 + 2.3 * k; ctx.stroke();  /* núcleo */
+        }
+      }
+    }
+  }
+
+  /* ── Bucle: solo corre mientras la portada se ve y la pestaña está activa ── */
+  let running = false, raf = 0, last = 0, visible = true, lastScroll = -1e9, lastDraw = 0;
+  /* Mientras se hace scroll el lienzo se congela: la portada se está yendo, y así el efecto no le quita fluidez al scroll */
+  window.addEventListener('scroll', () => { lastScroll = performance.now(); }, { passive: true });
+  function frame(t) {
+    raf = 0; if (!running) return;
+    raf = requestAnimationFrame(frame);
+    if (t - lastScroll < 160) { last = 0; return; }                       /* scroll en curso: no se calcula ni se dibuja nada */
+    if (CFG.minFrame && t - lastDraw < CFG.minFrame - 2) return;           /* tope de cuadros por segundo */
+    lastDraw = t;
+    const dt = Math.min(50, last ? t - last : 16.67); last = t;
+    update(dt, t); draw(t);
+    if (!canvas.classList.contains('on')) canvas.classList.add('on');
+  }
+  function sync() {
+    const go = visible && !document.hidden && !reduced;
+    if (go && !running) { running = true; last = 0; raf = requestAnimationFrame(frame); }
+    else if (!go && running) { running = false; cancelAnimationFrame(raf); raf = 0; }
+  }
+  if ('IntersectionObserver' in window) new IntersectionObserver(es => { visible = es[0].isIntersecting; sync(); }).observe(hero);
+  document.addEventListener('visibilitychange', sync);
+  if ('ResizeObserver' in window) new ResizeObserver(fit).observe(hero); else window.addEventListener('resize', fit);
+  fit(); sync();
+  if (reduced) canvas.classList.add('on');
 })();
 </script>
 
