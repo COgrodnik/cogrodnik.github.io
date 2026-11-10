@@ -144,6 +144,14 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
     #111111;
 }
 
+/* Cursor de la portada: cuadrado (solo contorno, 2 px) centrado en el puntero + coordenadas (x,y) en su esquina superior derecha.
+   Solo con mouse; aparece mientras el puntero está sobre la portada negra y se va al salir de ella.
+   'difference': sobre las letras blancas del título el trazo se invierte y no desaparece. */
+#hero-hud { position:fixed; left:0; top:0; z-index:15; pointer-events:none; opacity:0; transition:opacity .15s ease;
+            mix-blend-mode:difference; will-change:transform; }
+#hero-hud.on { opacity:1; }
+#hero-hud .sq { position:absolute; left:-18px; top:-18px; width:36px; height:36px; border:2px solid #fff; box-sizing:border-box; }   /* 36 px: tamaño del cuadrado */
+#hero-hud .xy { position:absolute; left:26px; top:-22px; white-space:nowrap; color:#fff; font:500 12px/1 'Montserrat', sans-serif; font-variant-numeric:tabular-nums; letter-spacing:0.02em; }
 /* Constelación interactiva: primer hijo de la portada, así queda debajo de todo el texto */
 #hero-fx { position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none; opacity:0; transition:opacity 1.2s ease; }
 #hero-fx.on { opacity:1; }
@@ -718,6 +726,8 @@ body { font-family: 'Montserrat', sans-serif; overflow-x: clip; background: #fff
     <div class="hero-year">2026</div>
   </div>
 </section>
+
+<div id="hero-hud" aria-hidden="true"><div class="sq"></div><div class="xy">(0,0)</div></div>
 
 <div id="bio-wrap">
 <section id="about">
@@ -1581,7 +1591,10 @@ function createDots(dotsEl, N, onPick) {
     maxNodes: coarse ? 64 : 170,
     link:     coarse ? 104 : 142,        /* distancia máxima a la que se unen dos nodos */
     radius:   coarse ? 160 : 235,        /* radio de influencia del puntero */
-    rays:     1.7,                       /* los hilos del puntero llegan hasta radius × rays (rayos largos y tenues) */
+    network:  true,                      /* false = apaga la constelación por completo (queda solo el cuadrado con coordenadas) */
+    rays:     1.0,                       /* los hilos del puntero llegan hasta radius × rays (1 = sin rayos largos; 1.7 = rayos largos y tenues) */
+    ptrLinks: 0.4,                       /* intensidad de los hilos que salen del puntero (0 = ninguno; 0.8 = fuertes) */
+    boost:    0.4,                       /* cuánto brilla la red cerca del puntero */
     drift:    0.2,                       /* velocidad de la deriva ambiente (px por fotograma a 60 Hz) */
     pull:     0.058, swirl: 0.04,        /* atracción hacia el puntero y giro a su alrededor */
     maxSpeed: 2.4,
@@ -1591,6 +1604,8 @@ function createDots(dotsEl, N, onPick) {
     minFrame: coarse ? 33 : 0,           /* en celular se limita a ~30 cuadros/s: la deriva lenta se ve igual y gasta la mitad */
     glow:     !coarse                    /* resplandor del trazo (en celular se omite) */
   };
+
+  if (!CFG.network) { canvas.remove(); return; }
 
   let w = 0, h = 0, dpr = 1, nodes = [];
   const ptr = { x: 0, y: 0, sx: 0, sy: 0, last: -1e9, started: false };   /* x,y: objetivo · sx,sy: posición suavizada */
@@ -1693,11 +1708,11 @@ function createDots(dotsEl, N, onPick) {
         const base = 1 - Math.sqrt(d2) / L;
         let boost = 0;
         if (live) { const mx = (A.x + B.x) * 0.5 - px, my = (A.y + B.y) * 0.5 - py, m2 = mx * mx + my * my; if (m2 < R2) boost = 1 - Math.sqrt(m2) / R; }
-        put(base * base * (0.11 + 0.62 * boost), A.x, A.y, B.x, B.y);
+        put(base * base * (0.11 + CFG.boost * boost), A.x, A.y, B.x, B.y);
       }
       if (live) {
         const dx = A.x - px, dy = A.y - py, d2 = dx * dx + dy * dy;
-        if (d2 < RR2) { const f = 1 - Math.sqrt(d2) / RR; put(Math.pow(f, d2 < R2 ? 1.25 : 2.2) * 0.8, px, py, A.x, A.y); }   /* cerca: hilos fuertes · lejos: rayos tenues */
+        if (d2 < RR2) { const f = 1 - Math.sqrt(d2) / RR; put(Math.pow(f, d2 < R2 ? 1.25 : 2.2) * CFG.ptrLinks, px, py, A.x, A.y); }   /* cerca: hilos fuertes · lejos: rayos tenues */
       }
     }
     ctx.lineCap = 'round';
@@ -1760,6 +1775,41 @@ function createDots(dotsEl, N, onPick) {
   if ('ResizeObserver' in window) new ResizeObserver(fit).observe(hero); else window.addEventListener('resize', fit);
   fit(); sync();
   if (reduced) canvas.classList.add('on');
+})();
+
+/* ═══════════════════ PORTADA: cursor con cuadrado y coordenadas ═══════════════════
+   Mientras el mouse está sobre la portada negra: un cuadrado (solo contorno, 2 px) centrado en el puntero y, en su esquina
+   superior derecha, las coordenadas "(x,y)" del puntero en la pantalla. Se oculta al salir de la portada (al hacer scroll hacia la
+   biografía, al bajar el mouse más allá de ella o al sacarlo de la ventana). Solo con mouse: en celular no hay cursor y no se muestra.
+   El tamaño se cambia en la regla CSS "#hero-hud .sq" (width/height y left/top = la mitad en negativo). */
+(() => {
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  const hero  = document.getElementById('hero');
+  const hud   = document.getElementById('hero-hud');
+  const label = hud && hud.querySelector('.xy');
+  if (!hero || !hud || !label) return;
+
+  let x = 0, y = 0, inWindow = false, shown = false, raf = 0, heroH = hero.offsetHeight;
+
+  function place() {                                       /* un solo cálculo por fotograma, aunque lleguen varios eventos */
+    raf = 0;
+    const px = Math.round(x), py = Math.round(y);          /* en píxeles enteros: el trazo de 2 px se ve nítido */
+    hud.style.transform = 'translate3d(' + px + 'px,' + py + 'px,0)';
+    label.textContent = '(' + px + ',' + py + ')';
+  }
+  function evaluate() {                                    /* ¿el puntero está sobre la portada? (la portada arranca en y = 0 del documento) */
+    const on = inWindow && (y + window.scrollY) <= heroH;
+    if (on !== shown) { shown = on; hud.classList.toggle('on', on); }
+    if (on && !raf) raf = requestAnimationFrame(place);
+  }
+  document.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse') return;                 /* ignora toques y lápiz */
+    x = e.clientX; y = e.clientY; inWindow = true; evaluate();
+  }, { passive: true });
+  document.documentElement.addEventListener('mouseleave', () => { inWindow = false; evaluate(); });   /* el mouse salió de la ventana */
+  window.addEventListener('blur', () => { inWindow = false; evaluate(); });
+  window.addEventListener('scroll', () => { if (inWindow) evaluate(); }, { passive: true });          /* la portada se va con el scroll */
+  if ('ResizeObserver' in window) new ResizeObserver(() => { heroH = hero.offsetHeight; evaluate(); }).observe(hero);
 })();
 </script>
 
