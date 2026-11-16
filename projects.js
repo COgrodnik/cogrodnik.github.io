@@ -35,7 +35,7 @@ const PROJECTS = [
     title:  'Cambridge & José Cruz',
     desc:   'Diseño y fabricación de espacio para exhibición internacional.',
     cover:  'portadas-img/Cambridge_cover.png',
-    slides: ['proyectos-img/Cambridge_01.jpg', 'proyectos-img/Cambridge_03.jpg', 'proyectos-img/Cambridge_04.jpg']
+    slides: ['proyectos-img/Portafolio_UK-01.jpg', 'proyectos-img/Portafolio_UK-02.jpg', 'proyectos-img/Portafolio_UK-03.jpg']
   },
   {
     key:    'konatec',
