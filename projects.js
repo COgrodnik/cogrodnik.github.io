@@ -64,5 +64,12 @@ const PROJECTS = [
     desc:   'Diseño de espacios arquitectónicos.',
     cover:  'portadas-img/Refugio_cover.png',
     slides: ['proyectos-img/Refugio_Prisma_01.jpg', 'proyectos-img/Refugio_Prisma_02.jpg']
+  },
+  {
+    key:    'mutante',
+    title:  'arteMUTANTE',
+    desc:   'Relización de istalación artística interactiva.',
+    cover:  'portadas-img/ccc_cover.png',
+    slides: ['proyectos-img/Portafolio_CCC-01.jpg', 'proyectos-img/Portafolio_CCC-02.jpg']
   }
 ];
