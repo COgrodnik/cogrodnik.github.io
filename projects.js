@@ -50,6 +50,13 @@ const PROJECTS = [
     desc:   'Concurso diseño para especies.',
     cover:  'portadas-img/Lontra_cover.png',
     slides: ['proyectos-img/Lontra_Platform_01.jpg', 'proyectos-img/Lontra_Platform_02.jpg', 'proyectos-img/Lontra_Platform_03.jpg']
+  }, 
+   {
+    key:    'unex',
+    title:  'Brida Snap UNEX',
+    desc:   'Rediseño de fijación eléctrica.',
+    cover:  'portadas-img/UNEX_cover.png',
+    slides: ['proyectos-img/Portafolio_Unex-01.jpg', 'proyectos-img/Portafolio_Unex-02.jpg']
   },
   {
     key:    'copihue',
